@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Dados pessoais e gerados em tempo de execução -- nunca devem ir pro GitHub
+data/*.db
+
+# Segredos: chaves de API e credenciais do Google Drive
+config.py
+client_secret.json
+token.json
