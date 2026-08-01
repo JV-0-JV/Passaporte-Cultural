@@ -1,0 +1,24 @@
+bash
+cat > /home/claude/passaporte-cultural/requirements.txt << 'EOF'
+Flask>=3.0
+requests>=2.31
+
+# As três de baixo só são necessárias se você for usar a sincronização
+# com o Google Drive (aba Backup). Se não for usar, pode até apagar
+# essas linhas e rodar sem elas -- o resto do site funciona normalmente.
+google-auth-oauthlib>=1.2
+google-api-python-client>=2.100
+google-auth-httplib2>=0.2
+EOF
+cat /home/claude/passaporte-cultural/requirements.txt
+
+Saída
+Flask>=3.0
+requests>=2.31
+
+# As três de baixo só são necessárias se você for usar a sincronização
+# com o Google Drive (aba Backup). Se não for usar, pode até apagar
+# essas linhas e rodar sem elas -- o resto do site funciona normalmente.
+google-auth-oauthlib>=1.2
+google-api-python-client>=2.100
+google-auth-httplib2>=0.2
