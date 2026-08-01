@@ -8,12 +8,6 @@
 
 const TIPOS = ['Filme', 'Série', 'Anime', 'Jogo', 'Livro', 'Mangá', 'HQ', 'Visual Novel', 'Novel', 'Podcast', 'Música', 'Outro'];
 
-const CODIGOS_TIPO = {
-  'Filme': 'FILM', 'Série': 'SÉR', 'Anime': 'ANI', 'Jogo': 'GAME', 'Livro': 'LIVRO',
-  'Mangá': 'MANGÁ', 'HQ': 'HQ', 'Visual Novel': 'VN', 'Novel': 'NOVEL',
-  'Podcast': 'POD', 'Música': 'MÚS', 'Outro': 'OUTRO',
-};
-
 const STATUS = ['Quero começar', 'Em andamento', 'Concluído', 'Pausado', 'Abandonado'];
 
 const STATUS_CLASSE = {
@@ -257,7 +251,7 @@ function renderizarMidias(midias) {
     <div class="ficha">
       ${m.repertorio ? '<span class="marca-repertorio">REPERTÓRIO</span>' : ''}
       <div class="ficha-topo">
-        <span class="codigo-tipo">${CODIGOS_TIPO[m.tipo] || m.tipo.toUpperCase().slice(0, 5)}</span>
+        <span class="codigo-tipo">${m.tipo.toUpperCase()}</span>
         <span class="tag-idioma" style="background:${corIdioma(m.idioma)}">${escapeHtml(m.idioma)}</span>
       </div>
       ${m.capa_url
@@ -531,7 +525,7 @@ async function carregarRepertorio() {
       ${itens.map(m => `
         <div class="cartao-repertorio">
           <h4>${escapeHtml(m.titulo)}</h4>
-          <div class="meta">${CODIGOS_TIPO[m.tipo] || m.tipo} · ${escapeHtml(m.idioma)}</div>
+          <div class="meta">${escapeHtml(m.tipo)} · ${escapeHtml(m.idioma)}</div>
           ${m.anotacoes ? `<div class="anotacoes">${escapeHtml(m.anotacoes)}</div>` : '<div class="anotacoes obs">Sem anotações ainda.</div>'}
         </div>
       `).join('')}
