@@ -34,6 +34,9 @@ const UNIDADE_TIPO = {
   'Novel': 'palavras',
 };
 
+// Tipos que não têm uma API de busca automática configurada (ex: "Outro")
+const TIPOS_SEM_BUSCA = ['Outro'];
+
 let graficoIdiomas, graficoTipos, graficoSemana;
 let midiaDetalheAtual = null;
 let tipoMidiaAtual = null;
@@ -257,6 +260,9 @@ function renderizarMidias(midias) {
         <span class="codigo-tipo">${CODIGOS_TIPO[m.tipo] || m.tipo.toUpperCase().slice(0, 5)}</span>
         <span class="tag-idioma" style="background:${corIdioma(m.idioma)}">${escapeHtml(m.idioma)}</span>
       </div>
+      ${m.capa_url
+        ? `<img class="capa-ficha" src="${m.capa_url}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'capa-ficha capa-ausente'}))">`
+        : '<div class="capa-ficha capa-ausente"></div>'}
       <h3>${escapeHtml(m.titulo)}</h3>
       ${m.progresso ? `<div class="progresso">${escapeHtml(m.progresso)}</div>` : ''}
       <span class="selo-status ${STATUS_CLASSE[m.status] || ''}">${escapeHtml(m.status)}</span>
@@ -363,8 +369,9 @@ async function salvarMidia(evento) {
   }
 }
 
-// Tipos que não têm uma API de busca automática configurada (ex: "Outro")
-const TIPOS_SEM_BUSCA = ['Outro'];
+// ---------------------------------------------------------------------
+// BUSCA AUTOMÁTICA DE METADADOS (capa, ano, sinopse)
+// ---------------------------------------------------------------------
 
 async function buscarMetadadosForm() {
   const tipo = document.getElementById('midia-tipo').value;
