@@ -350,30 +350,21 @@ def buscar_metadados_rota():
 
 @app.route('/api/perfil', methods=['GET'])
 def obter_perfil():
-    """Retorna as informações do perfil do usuário e os detalhes dos seus 4 filmes favoritos."""
+    """Retorna as informações básicas do usuário (nome, avatar) e os detalhes dos seus 4 filmes favoritos."""
     conn = get_db()
     linha_perfil = conn.execute('SELECT * FROM perfil WHERE id = 1').fetchone()
     
     if not linha_perfil:
-        # Se por algum motivo o perfil não existir, cria o registro padrão
+        # Se por algum motivo o perfil não existir, cria o registro padrão básico
         conn.execute('''
-            INSERT INTO perfil (id, nome, localizacao, avatar_url, bio, links_sociais, seguidores, seguindo, badge_pro, badge_patron, top4_midias)
-            VALUES (1, 'Viajante Cultural', 'São Paulo, Brasil', '',
-                    'Explorando o mundo através do cinema, leitura e imersão cultural.',
-                    '{"letterboxd": "https://letterboxd.com", "github": "https://github.com", "instagram": "https://instagram.com"}',
-                    128, 45, 1, 1, '[]')
+            INSERT INTO perfil (id, nome, avatar_url, top4_midias)
+            VALUES (1, 'Viajante Cultural', '', '[]')
         ''')
         conn.commit()
         linha_perfil = conn.execute('SELECT * FROM perfil WHERE id = 1').fetchone()
         
     perfil = dict(linha_perfil)
     
-    # Processa os links de redes sociais salvos em JSON
-    try:
-        perfil['links_sociais'] = json.loads(perfil['links_sociais']) if perfil.get('links_sociais') else {}
-    except Exception:
-        perfil['links_sociais'] = {}
-        
     # Processa a lista de IDs ou objetos do Top 4 Filmes
     try:
         top4_ids = json.loads(perfil['top4_midias']) if perfil.get('top4_midias') else []
@@ -403,13 +394,10 @@ def obter_perfil():
 
 @app.route('/api/perfil', methods=['PUT'])
 def atualizar_perfil():
-    """Atualiza as informações de perfil, biografia, redes sociais e favoritos."""
+    """Atualiza nome, avatar e a lista de mídias favoritas (Top 4)."""
     dados = request.get_json(force=True) or {}
     
     conn = get_db()
-    
-    links = dados.get('links_sociais', {})
-    links_json = json.dumps(links, ensure_ascii=False) if isinstance(links, dict) else str(links)
     
     top4 = dados.get('top4_midias', [])
     top4_json = json.dumps(top4, ensure_ascii=False) if isinstance(top4, (list, dict)) else str(top4)
@@ -417,51 +405,18 @@ def atualizar_perfil():
     conn.execute('''
         UPDATE perfil SET
             nome = ?,
-            localizacao = ?,
             avatar_url = ?,
-            bio = ?,
-            links_sociais = ?,
-            seguidores = ?,
-            seguindo = ?,
-            badge_pro = ?,
-            badge_patron = ?,
             top4_midias = ?
         WHERE id = 1
     ''', (
         dados.get('nome', 'Viajante Cultural').strip(),
-        dados.get('localizacao', '').strip(),
         dados.get('avatar_url', '').strip(),
-        dados.get('bio', '').strip(),
-        links_json,
-        int(dados.get('seguidores', 0)),
-        int(dados.get('seguindo', 0)),
-        1 if dados.get('badge_pro') else 0,
-        1 if dados.get('badge_patron') else 0,
         top4_json
     ))
     
     conn.commit()
     conn.close()
     return jsonify({'ok': True})
-
-
-@app.route('/api/perfil/conexoes', methods=['GET'])
-def obter_conexoes():
-    """Retorna a lista de conexões (seguidores/seguindo) para exibição no atalho."""
-    seguidores = [
-        {"nome": "Sofia Chen", "user": "@sofiachen", "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80", "bio": "Cineasta & estudante de Mandarim", "seguindo": True},
-        {"nome": "Lucas Vance", "user": "@lucasvance", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80", "bio": "Fã de animes & literatura japonesa", "seguindo": True},
-        {"nome": "Amina Diop", "user": "@aminadiop", "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80", "bio": "Poliglota | 5 idiomas em aprendizado", "seguindo": False},
-        {"nome": "Mateo Rossi", "user": "@mateorossi", "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80", "bio": "Amante do cinema clássico italiano", "seguindo": True},
-        {"nome": "Elena Rostova", "user": "@elenarostova", "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80", "bio": "Leitora compulsiva de novels e HQs", "seguindo": True}
-    ]
-    seguindo = [
-        {"nome": "Sofia Chen", "user": "@sofiachen", "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80", "bio": "Cineasta & estudante de Mandarim", "seguindo": True},
-        {"nome": "Lucas Vance", "user": "@lucasvance", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80", "bio": "Fã de animes & literatura japonesa", "seguindo": True},
-        {"nome": "Mateo Rossi", "user": "@mateorossi", "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80", "bio": "Amante do cinema clássico italiano", "seguindo": True},
-        {"nome": "Elena Rostova", "user": "@elenarostova", "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80", "bio": "Leitora compulsiva de novels e HQs", "seguindo": True}
-    ]
-    return jsonify({'seguidores': seguidores, 'seguindo': seguindo})
 
 
 # ---------------------------------------------------------------------------

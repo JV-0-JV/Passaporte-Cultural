@@ -36,48 +36,24 @@
       </div>
     </div>
 
-    <!-- ================= 1. CABEÇALHO E BIOGRAFIA + 2. FILMES FAVORITOS (TOP 4) ================= -->
+    <!-- ================= PERFIL (FOTO + NOME) & FILMES FAVORITOS (TOP 4) ================= -->
     <div class="painel-card perfil-card" style="margin-bottom: 24px;">
       <div class="perfil-header-container">
-        <!-- Avatar, Foto e Informações Principais -->
+        <!-- Avatar, Foto e Nome -->
         <div class="perfil-usuario-box">
           <div class="perfil-avatar-wrapper">
             <img id="perfil-avatar-img" src="" alt="Foto de Perfil" class="perfil-avatar-foto" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Passaporte+Cultural&background=1B2A4A&color=fff&size=150'">
           </div>
 
           <div class="perfil-info-principal">
-            <div class="perfil-linha-titulo">
-              <h2 id="perfil-nome-exibicao" class="perfil-nome-texto">Carregando...</h2>
-              <div id="perfil-badges-container" class="perfil-badges-box"></div>
-            </div>
-
-            <div class="perfil-localizacao-linha">
-              <span class="icone-loc">📍</span> <span id="perfil-localizacao-texto">...</span>
-            </div>
-
-            <p id="perfil-bio-texto" class="perfil-bio-conteudo">...</p>
-
-            <!-- Links de redes sociais -->
-            <div id="perfil-redes-container" class="perfil-redes-box"></div>
+            <h2 id="perfil-nome-exibicao" class="perfil-nome-texto">Carregando...</h2>
           </div>
         </div>
 
-        <!-- Coluna de Seguidores / Seguindo e Ação de Editar -->
+        <!-- Botão de Editar Nome e Foto -->
         <div class="perfil-conexoes-acoes">
-          <div class="card-conexoes-atalho" id="btn-abrir-modal-conexoes" title="Clique para ver conexões">
-            <div class="conexao-item">
-              <span id="perfil-num-seguidores" class="conexao-numero">0</span>
-              <span class="conexao-rotulo">Seguidores</span>
-            </div>
-            <div class="conexao-divisor"></div>
-            <div class="conexao-item">
-              <span id="perfil-num-seguindo" class="conexao-numero">0</span>
-              <span class="conexao-rotulo">Seguindo</span>
-            </div>
-          </div>
-          
           <button class="botao secundario perfil-editar-btn" id="btn-abrir-modal-perfil">
-            <span>✏️</span> Editar Perfil
+            <span>✏️</span> Editar Nome/Foto
           </button>
         </div>
       </div>
@@ -319,72 +295,24 @@
   </div>
 </div>
 
-<!-- ================= MODAL: EDITAR PERFIL ================= -->
+<!-- ================= MODAL: EDITAR PERFIL (NOME E FOTO) ================= -->
 <div class="modal-fundo" id="modal-perfil-fundo">
-  <div class="modal modal-largura-media">
-    <h2>Editar Perfil e Biografia</h2>
+  <div class="modal">
+    <h2>Editar Perfil</h2>
     <form id="form-perfil">
-      <div class="linha-2">
-        <div class="campo">
-          <label for="edit-perfil-nome">Nome de Usuário</label>
-          <input type="text" id="edit-perfil-nome" required placeholder="ex: Sofia Chen">
-        </div>
-        <div class="campo">
-          <label for="edit-perfil-localizacao">Localização</label>
-          <input type="text" id="edit-perfil-localizacao" placeholder="ex: São Paulo, Brasil">
-        </div>
+      <div class="campo">
+        <label for="edit-perfil-nome">Nome do Usuário</label>
+        <input type="text" id="edit-perfil-nome" required placeholder="ex: Seu Nome">
       </div>
 
       <div class="campo">
-        <label for="edit-perfil-avatar">URL do Avatar (Foto)</label>
+        <label for="edit-perfil-avatar">URL da Foto de Perfil (Avatar)</label>
         <input type="url" id="edit-perfil-avatar" placeholder="https://exemplo.com/sua-foto.jpg">
-      </div>
-
-      <div class="campo">
-        <label for="edit-perfil-bio">Biografia (Bio)</label>
-        <textarea id="edit-perfil-bio" rows="3" placeholder="Texto curto sobre seu gosto por cinema e imersão em idiomas..."></textarea>
-      </div>
-
-      <div class="linha-2">
-        <div class="campo">
-          <label for="edit-perfil-seguidores">Seguidores</label>
-          <input type="number" id="edit-perfil-seguidores" min="0" value="0">
-        </div>
-        <div class="campo">
-          <label for="edit-perfil-seguindo">Seguindo</label>
-          <input type="number" id="edit-perfil-seguindo" min="0" value="0">
-        </div>
-      </div>
-
-      <!-- Selos de Assinatura -->
-      <div class="campo">
-        <label>Selos de Assinatura (Badges)</label>
-        <div class="linha-checks">
-          <label class="campo-check">
-            <input type="checkbox" id="edit-perfil-pro">
-            <span>👑 Membro PRO</span>
-          </label>
-          <label class="campo-check" style="margin-left: 16px;">
-            <input type="checkbox" id="edit-perfil-patron">
-            <span>⭐ PATRON</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Redes Sociais -->
-      <div class="campo">
-        <label>Redes Sociais & Links</label>
-        <div class="grade-redes-inputs">
-          <input type="url" id="link-letterboxd" placeholder="Letterboxd URL (https://letterboxd.com/...)">
-          <input type="url" id="link-instagram" placeholder="Instagram URL (https://instagram.com/...)">
-          <input type="url" id="link-twitter" placeholder="Twitter / X URL (https://x.com/...)">
-          <input type="url" id="link-github" placeholder="GitHub URL (https://github.com/...)">
-        </div>
       </div>
 
       <div class="modal-rodape">
         <button type="button" class="botao secundario" id="btn-cancelar-perfil">Cancelar</button>
-        <button type="submit" class="botao">Salvar Perfil</button>
+        <button type="submit" class="botao">Salvar</button>
       </div>
     </form>
   </div>
@@ -446,26 +374,6 @@
         <button type="submit" class="botao">Salvar Favoritos</button>
       </div>
     </form>
-  </div>
-</div>
-
-<!-- ================= MODAL: CONEXÕES (SEGUIDORES / SEGUINDO) ================= -->
-<div class="modal-fundo" id="modal-conexoes-fundo">
-  <div class="modal">
-    <div class="conexoes-modal-header">
-      <div class="conexoes-modal-tabs">
-        <button type="button" class="tab-conexao ativa" id="tab-btn-seguidores">Seguidores</button>
-        <button type="button" class="tab-conexao" id="tab-btn-seguindo">Seguindo</button>
-      </div>
-    </div>
-
-    <div class="lista-conexoes-box" id="lista-conexoes-conteudo">
-      <!-- Lista renderizada dinamicamente -->
-    </div>
-
-    <div class="modal-rodape">
-      <button type="button" class="botao secundario" id="btn-fechar-conexoes">Fechar</button>
-    </div>
   </div>
 </div>
 
