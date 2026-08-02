@@ -25,6 +25,377 @@
   --borda: rgba(35, 32, 27, 0.18);
   --sombra: 0 2px 0 rgba(35, 32, 27, 0.08);
 }
+/* ============================================================
+   TEMA ESCURO - PASSAPORTE CULTURAL
+   ============================================================ */
+
+[data-theme="dark"]{
+
+    /* Paleta */
+    --azul: #203760;
+    --azul-escuro: #10182d;
+
+    --bg: #181818;
+    --bg-textura: #232323;
+
+    --card-bg: #2B2B2B;
+
+    --tinta: #ECECEC;
+    --tinta-suave: #B5B5B5;
+
+    --borda: rgba(255,255,255,.12);
+
+    --dourado: #D8B45A;
+
+    --verde-selo: #5E9D7A;
+    --terracota: #C56A44;
+    --roxo-selo: #8B6FB5;
+
+    --sombra: 0 8px 20px rgba(0,0,0,.35);
+
+}
+
+/* ============================================================
+   FUNDO DA PÁGINA
+   ============================================================ */
+
+[data-theme="dark"] body{
+
+    background:
+    radial-gradient(
+        circle at top,
+        #323232 0%,
+        #222222 35%,
+        #181818 100%
+    );
+
+}
+
+/* ============================================================
+   CABEÇALHO
+   ============================================================ */
+
+[data-theme="dark"] .topo{
+
+    background:#18274B;
+    border-bottom:5px solid var(--dourado);
+
+}
+
+/* ============================================================
+   PERFIL
+   ============================================================ */
+
+[data-theme="dark"] .perfil-card{
+
+    position:relative;
+
+    background:
+    linear-gradient(
+        180deg,
+        #383838 0%,
+        #2B2B2B 100%
+    );
+
+    border:1px solid #4a4a4a;
+
+    box-shadow:
+        0 10px 25px rgba(0,0,0,.40);
+
+}
+
+/* Banner atrás do perfil */
+
+[data-theme="dark"] .perfil-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+    top:0;
+
+    width:100%;
+    height:120px;
+
+    background:
+    linear-gradient(
+        90deg,
+        #203760,
+        #314b84
+    );
+
+    opacity:.18;
+
+    pointer-events:none;
+
+}
+
+/* ============================================================
+   FOTO
+   ============================================================ */
+
+[data-theme="dark"] .perfil-avatar-foto{
+
+    box-shadow:
+        0 0 0 3px var(--dourado),
+        0 0 20px rgba(216,180,90,.35);
+
+}
+
+/* ============================================================
+   TÍTULOS
+   ============================================================ */
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3{
+
+    color:#F5F5F5;
+
+}
+
+[data-theme="dark"] p{
+
+    color:#C6C6C6;
+
+}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+
+[data-theme="dark"] .painel-card,
+[data-theme="dark"] .ficha,
+[data-theme="dark"] .cartao-repertorio,
+[data-theme="dark"] .cartao-backup,
+[data-theme="dark"] .modal{
+
+    background:#2B2B2B;
+
+    border:1px solid #444;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.35);
+
+}
+
+/* ============================================================
+   BOTÕES
+   ============================================================ */
+
+[data-theme="dark"] .botao{
+
+    background:#323232;
+
+    color:#ECECEC;
+
+    border:1px solid #666;
+
+}
+
+[data-theme="dark"] .botao:hover{
+
+    background:#414141;
+
+    border-color:var(--dourado);
+
+}
+
+[data-theme="dark"] .perfil-editar-btn{
+
+    background:#323232;
+
+    color:#F5F5F5;
+
+    border:1px solid #666;
+
+}
+
+[data-theme="dark"] .perfil-editar-btn:hover{
+
+    background:#414141;
+
+    border-color:var(--dourado);
+
+}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select{
+
+    background:#333;
+
+    color:#ECECEC;
+
+    border:1px solid #666;
+
+}
+
+/* ============================================================
+   TOP 4
+   ============================================================ */
+
+[data-theme="dark"] .top4-slot-vazio{
+
+    background:#313131;
+
+    border:2px dashed #666;
+
+    color:#CCCCCC;
+
+}
+
+[data-theme="dark"] .top4-slot-vazio:hover{
+
+    background:#3B3B3B;
+
+    border-color:var(--dourado);
+
+    color:#FFF;
+
+}
+
+[data-theme="dark"] .top4-poster-item{
+
+    border-color:#555;
+
+    box-shadow:0 8px 18px rgba(0,0,0,.45);
+
+}
+
+[data-theme="dark"] .top4-poster-item:hover{
+
+    border-color:var(--dourado);
+
+}
+
+/* ============================================================
+   MODAIS
+   ============================================================ */
+
+[data-theme="dark"] .modal{
+
+    background:#2B2B2B;
+
+}
+
+[data-theme="dark"] .modal-fundo{
+
+    background:rgba(0,0,0,.75);
+
+}
+
+/* ============================================================
+   RESULTADOS DA BUSCA
+   ============================================================ */
+
+[data-theme="dark"] .resultado-busca{
+
+    background:#353535;
+
+}
+
+[data-theme="dark"] .resultado-busca:hover{
+
+    border-color:var(--dourado);
+
+}
+
+/* ============================================================
+   LINKS
+   ============================================================ */
+
+[data-theme="dark"] a{
+
+    color:#ECECEC;
+
+}
+
+[data-theme="dark"] .link-acao{
+
+    color:var(--dourado);
+
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+
+[data-theme="dark"]::-webkit-scrollbar{
+
+    width:10px;
+
+}
+
+[data-theme="dark"]::-webkit-scrollbar-track{
+
+    background:#202020;
+
+}
+
+[data-theme="dark"]::-webkit-scrollbar-thumb{
+
+    background:#555;
+
+    border-radius:10px;
+
+}
+
+[data-theme="dark"]::-webkit-scrollbar-thumb:hover{
+
+    background:var(--dourado);
+
+}
+/* ============================
+   CAMPOS DO FORMULÁRIO
+   ============================ */
+
+[data-theme="dark"] .campo input,
+[data-theme="dark"] .campo select,
+[data-theme="dark"] .campo textarea{
+
+    background:#1E1E1E;
+
+    color:#ECECEC;
+
+    border:1px solid #555;
+
+}
+
+/* Placeholder */
+
+[data-theme="dark"] .campo input::placeholder,
+[data-theme="dark"] .campo textarea::placeholder{
+
+    color:#9E9E9E;
+
+}
+
+/* Select */
+
+[data-theme="dark"] .campo select{
+
+    color:#ECECEC;
+
+}
+
+/* Quando estiver em foco */
+
+[data-theme="dark"] .campo input:focus,
+[data-theme="dark"] .campo select:focus,
+[data-theme="dark"] .campo textarea:focus{
+
+    outline:none;
+
+    border-color:var(--dourado);
+
+    box-shadow:0 0 8px rgba(216,180,90,.35);
+
+}
 
 * { box-sizing: border-box; }
 
