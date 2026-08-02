@@ -345,25 +345,145 @@ def buscar_metadados_rota():
 
 
 # ---------------------------------------------------------------------------
+# PERFIL DO USUÁRIO E FILMES FAVORITOS (TOP 4)
+# ---------------------------------------------------------------------------
+
+@app.route('/api/perfil', methods=['GET'])
+def obter_perfil():
+    """Retorna as informações do perfil do usuário e os detalhes dos seus 4 filmes favoritos."""
+    conn = get_db()
+    linha_perfil = conn.execute('SELECT * FROM perfil WHERE id = 1').fetchone()
+    
+    if not linha_perfil:
+        # Se por algum motivo o perfil não existir, cria o registro padrão
+        conn.execute('''
+            INSERT INTO perfil (id, nome, localizacao, avatar_url, bio, links_sociais, seguidores, seguindo, badge_pro, badge_patron, top4_midias)
+            VALUES (1, 'Viajante Cultural', 'São Paulo, Brasil', '',
+                    'Explorando o mundo através do cinema, leitura e imersão cultural.',
+                    '{"letterboxd": "https://letterboxd.com", "github": "https://github.com", "instagram": "https://instagram.com"}',
+                    128, 45, 1, 1, '[]')
+        ''')
+        conn.commit()
+        linha_perfil = conn.execute('SELECT * FROM perfil WHERE id = 1').fetchone()
+        
+    perfil = dict(linha_perfil)
+    
+    # Processa os links de redes sociais salvos em JSON
+    try:
+        perfil['links_sociais'] = json.loads(perfil['links_sociais']) if perfil.get('links_sociais') else {}
+    except Exception:
+        perfil['links_sociais'] = {}
+        
+    # Processa a lista de IDs ou objetos do Top 4 Filmes
+    try:
+        top4_ids = json.loads(perfil['top4_midias']) if perfil.get('top4_midias') else []
+    except Exception:
+        top4_ids = []
+
+    # Busca no banco as mídias selecionadas para o Top 4
+    top4_detalhados = []
+    for item in top4_ids:
+        if isinstance(item, int):
+            # Se for ID, consulta na tabela de mídias
+            midia = conn.execute('SELECT id, titulo, capa_url, tipo, status, nota FROM midias WHERE id = ?', (item,)).fetchone()
+            if midia:
+                top4_detalhados.append(dict(midia))
+            else:
+                top4_detalhados.append(None)
+        elif isinstance(item, dict):
+            # Se for um objeto customizado
+            top4_detalhados.append(item)
+        else:
+            top4_detalhados.append(None)
+
+    conn.close()
+    perfil['top4_detalhados'] = top4_detalhados
+    return jsonify(perfil)
+
+
+@app.route('/api/perfil', methods=['PUT'])
+def atualizar_perfil():
+    """Atualiza as informações de perfil, biografia, redes sociais e favoritos."""
+    dados = request.get_json(force=True) or {}
+    
+    conn = get_db()
+    
+    links = dados.get('links_sociais', {})
+    links_json = json.dumps(links, ensure_ascii=False) if isinstance(links, dict) else str(links)
+    
+    top4 = dados.get('top4_midias', [])
+    top4_json = json.dumps(top4, ensure_ascii=False) if isinstance(top4, (list, dict)) else str(top4)
+
+    conn.execute('''
+        UPDATE perfil SET
+            nome = ?,
+            localizacao = ?,
+            avatar_url = ?,
+            bio = ?,
+            links_sociais = ?,
+            seguidores = ?,
+            seguindo = ?,
+            badge_pro = ?,
+            badge_patron = ?,
+            top4_midias = ?
+        WHERE id = 1
+    ''', (
+        dados.get('nome', 'Viajante Cultural').strip(),
+        dados.get('localizacao', '').strip(),
+        dados.get('avatar_url', '').strip(),
+        dados.get('bio', '').strip(),
+        links_json,
+        int(dados.get('seguidores', 0)),
+        int(dados.get('seguindo', 0)),
+        1 if dados.get('badge_pro') else 0,
+        1 if dados.get('badge_patron') else 0,
+        top4_json
+    ))
+    
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True})
+
+
+@app.route('/api/perfil/conexoes', methods=['GET'])
+def obter_conexoes():
+    """Retorna a lista de conexões (seguidores/seguindo) para exibição no atalho."""
+    seguidores = [
+        {"nome": "Sofia Chen", "user": "@sofiachen", "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80", "bio": "Cineasta & estudante de Mandarim", "seguindo": True},
+        {"nome": "Lucas Vance", "user": "@lucasvance", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80", "bio": "Fã de animes & literatura japonesa", "seguindo": True},
+        {"nome": "Amina Diop", "user": "@aminadiop", "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80", "bio": "Poliglota | 5 idiomas em aprendizado", "seguindo": False},
+        {"nome": "Mateo Rossi", "user": "@mateorossi", "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80", "bio": "Amante do cinema clássico italiano", "seguindo": True},
+        {"nome": "Elena Rostova", "user": "@elenarostova", "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80", "bio": "Leitora compulsiva de novels e HQs", "seguindo": True}
+    ]
+    seguindo = [
+        {"nome": "Sofia Chen", "user": "@sofiachen", "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80", "bio": "Cineasta & estudante de Mandarim", "seguindo": True},
+        {"nome": "Lucas Vance", "user": "@lucasvance", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80", "bio": "Fã de animes & literatura japonesa", "seguindo": True},
+        {"nome": "Mateo Rossi", "user": "@mateorossi", "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80", "bio": "Amante do cinema clássico italiano", "seguindo": True},
+        {"nome": "Elena Rostova", "user": "@elenarostova", "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80", "bio": "Leitora compulsiva de novels e HQs", "seguindo": True}
+    ]
+    return jsonify({'seguidores': seguidores, 'seguindo': seguindo})
+
+
+# ---------------------------------------------------------------------------
 # BACKUP (exportar / importar tudo em um único arquivo JSON)
 # ---------------------------------------------------------------------------
 
 def _gerar_backup_json():
-    """Monta uma string JSON com tudo que está no banco. Usada tanto pelo
-    download manual (.json) quanto pelo envio para o Google Drive."""
+    """Monta uma string JSON com tudo que está no banco (mídias, atividades e perfil)."""
     conn = get_db()
     midias = [dict(r) for r in conn.execute('SELECT * FROM midias').fetchall()]
     atividades = [dict(r) for r in conn.execute('SELECT * FROM atividades').fetchall()]
+    perfil_row = conn.execute('SELECT * FROM perfil WHERE id = 1').fetchone()
+    perfil = dict(perfil_row) if perfil_row else None
     conn.close()
-    return json.dumps({'midias': midias, 'atividades': atividades}, ensure_ascii=False, indent=2)
+    return json.dumps({'midias': midias, 'atividades': atividades, 'perfil': perfil}, ensure_ascii=False, indent=2)
 
 
 def _restaurar_backup(dados):
-    """Apaga os dados atuais e recarrega a partir de um dicionário
-    {'midias': [...], 'atividades': [...]}. Usada tanto pela importação
-    manual de arquivo quanto pela restauração via Google Drive."""
+    """Apaga os dados atuais e recarrega a partir de um dicionário."""
     midias = dados.get('midias', [])
     atividades = dados.get('atividades', [])
+    perfil = dados.get('perfil')
 
     conn = get_db()
     conn.execute('DELETE FROM atividades')
@@ -389,6 +509,17 @@ def _restaurar_backup(dados):
         ''', (
             a.get('id'), a.get('midia_id'), a.get('data'), a.get('minutos'),
             a.get('quantidade'), a.get('observacao'),
+        ))
+
+    if perfil:
+        conn.execute('DELETE FROM perfil')
+        conn.execute('''
+            INSERT INTO perfil (id, nome, localizacao, avatar_url, bio, links_sociais, seguidores, seguindo, badge_pro, badge_patron, top4_midias)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            perfil.get('id', 1), perfil.get('nome'), perfil.get('localizacao'), perfil.get('avatar_url'),
+            perfil.get('bio'), perfil.get('links_sociais'), perfil.get('seguidores', 0), perfil.get('seguindo', 0),
+            perfil.get('badge_pro', 0), perfil.get('badge_patron', 0), perfil.get('top4_midias', '[]')
         ))
 
     conn.commit()

@@ -55,6 +55,21 @@ def init_db():
             observacao TEXT,
             FOREIGN KEY (midia_id) REFERENCES midias (id) ON DELETE CASCADE
         );
+
+        -- Tabela de perfil (cabeçalho, bio, badges, redes sociais e filmes favoritos top 4)
+        CREATE TABLE IF NOT EXISTS perfil (
+            id INTEGER PRIMARY KEY DEFAULT 1,
+            nome TEXT NOT NULL DEFAULT 'Viajante Cultural',
+            localizacao TEXT DEFAULT 'São Paulo, Brasil',
+            avatar_url TEXT DEFAULT '',
+            bio TEXT DEFAULT 'Explorando o mundo através do cinema, leitura e imersão cultural em idiomas.',
+            links_sociais TEXT DEFAULT '{"letterboxd": "https://letterboxd.com", "github": "https://github.com", "instagram": "https://instagram.com"}',
+            seguidores INTEGER DEFAULT 128,
+            seguindo INTEGER DEFAULT 45,
+            badge_pro INTEGER DEFAULT 1,
+            badge_patron INTEGER DEFAULT 1,
+            top4_midias TEXT DEFAULT '[]'
+        );
     ''')
     conn.commit()
 
@@ -63,6 +78,19 @@ def init_db():
     colunas = [linha['name'] for linha in conn.execute('PRAGMA table_info(atividades)').fetchall()]
     if 'quantidade' not in colunas:
         conn.execute('ALTER TABLE atividades ADD COLUMN quantidade INTEGER')
+        conn.commit()
+
+    # Garante que o perfil inicial (ID 1) existe no banco de dados
+    existente_perfil = conn.execute('SELECT id FROM perfil WHERE id = 1').fetchone()
+    if not existente_perfil:
+        conn.execute('''
+            INSERT INTO perfil (id, nome, localizacao, avatar_url, bio, links_sociais, seguidores, seguindo, badge_pro, badge_patron, top4_midias)
+            VALUES (1, 'Viajante Cultural', 'São Paulo, Brasil',
+                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+                    'Explorando o mundo através do cinema, literatura e imersão cultural.',
+                    '{"letterboxd": "https://letterboxd.com", "github": "https://github.com", "instagram": "https://instagram.com"}',
+                    128, 45, 1, 1, '[]')
+        ''')
         conn.commit()
 
     conn.close()

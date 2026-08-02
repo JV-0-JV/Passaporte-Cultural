@@ -110,6 +110,7 @@ function mudarVista(nome) {
 // ---------------------------------------------------------------------
 
 async function carregarPainel() {
+  await carregarPerfil();
   const dados = await api('/api/estatisticas');
 
   const horas = (dados.total_minutos / 60).toFixed(1);
@@ -625,6 +626,286 @@ async function baixarDoDrive() {
 }
 
 // ---------------------------------------------------------------------
+// CABEÇALHO, BIOGRAFIA E FILMES FAVORITOS (TOP 4)
+// ---------------------------------------------------------------------
+
+let perfilAtual = null;
+let conexoesDados = null;
+
+async function carregarPerfil() {
+  try {
+    perfilAtual = await api('/api/perfil');
+    renderizarPerfil(perfilAtual);
+    renderizarTop4(perfilAtual.top4_detalhados || []);
+  } catch (erro) {
+    console.error('Erro ao carregar perfil:', erro);
+  }
+}
+
+function renderizarPerfil(perfil) {
+  // Nome de Usuário e Foto de Avatar
+  document.getElementById('perfil-nome-exibicao').textContent = perfil.nome || 'Viajante Cultural';
+  const imgAvatar = document.getElementById('perfil-avatar-img');
+  imgAvatar.src = perfil.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80';
+
+  // Badges (Membro PRO e PATRON)
+  const boxBadges = document.getElementById('perfil-badges-container');
+  let badgesHtml = '';
+  if (perfil.badge_pro) {
+    badgesHtml += '<span class="badge-selo badge-pro">👑 PRO</span>';
+  }
+  if (perfil.badge_patron) {
+    badgesHtml += '<span class="badge-selo badge-patron">⭐ PATRON</span>';
+  }
+  boxBadges.innerHTML = badgesHtml;
+
+  // Localização e Biografia (Bio)
+  document.getElementById('perfil-localizacao-texto').textContent = perfil.localizacao || 'São Paulo, Brasil';
+  document.getElementById('perfil-bio-texto').textContent = perfil.bio || 'Explorando o mundo através do cinema, literatura e idiomas.';
+
+  // Contadores de Seguidores e Seguindo
+  document.getElementById('perfil-num-seguidores').textContent = perfil.seguidores || 0;
+  document.getElementById('perfil-num-seguindo').textContent = perfil.seguindo || 0;
+
+  // Links e Redes Sociais
+  const boxRedes = document.getElementById('perfil-redes-container');
+  const links = perfil.links_sociais || {};
+  const redesFormatadas = [
+    { chave: 'letterboxd', rotulo: 'Letterboxd', icone: '🎬' },
+    { chave: 'instagram', rotulo: 'Instagram', icone: '📸' },
+    { chave: 'twitter', rotulo: 'Twitter / X', icone: '🐦' },
+    { chave: 'github', rotulo: 'GitHub', icone: '💻' },
+  ];
+
+  let redesHtml = '';
+  redesFormatadas.forEach(r => {
+    if (links[r.chave]) {
+      redesHtml += `<a href="${escapeHtml(links[r.chave])}" target="_blank" rel="noopener" class="rede-link-tag"><span>${r.icone}</span> ${r.rotulo}</a>`;
+    }
+  });
+  boxRedes.innerHTML = redesHtml;
+}
+
+function renderizarTop4(top4List) {
+  const container = document.getElementById('top4-posters-grid');
+  let html = '';
+
+  // Renderiza até 4 slots de pôsteres verticais
+  for (let i = 0; i < 4; i++) {
+    const item = top4List[i];
+
+    if (item && (item.capa_url || item.titulo)) {
+      const titulo = escapeHtml(item.titulo || 'Filme Favorito');
+      const capa = item.capa_url || '';
+      const nota = item.nota ? '★'.repeat(item.nota) : '';
+
+      html += `
+        <div class="top4-poster-item" onclick="abrirModalTop4()">
+          ${capa 
+            ? `<img src="${escapeHtml(capa)}" alt="${titulo}" class="top4-poster-img" onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&auto=format&fit=crop&q=80'">`
+            : `<div class="capa-ficha capa-ausente" style="height:100%;"></div>`
+          }
+          <div class="top4-overlay">
+            <div class="top4-overlay-titulo">${titulo}</div>
+            <div class="top4-overlay-meta">${item.tipo || 'Filme'} ${nota ? '· ' + nota : ''}</div>
+          </div>
+        </div>
+      `;
+    } else {
+      // Slot vazio interativo para escolher filme
+      html += `
+        <div class="top4-slot-vazio" onclick="abrirModalTop4()">
+          <span class="icone-plus">+</span>
+          <span>Selecionar</span>
+        </div>
+      `;
+    }
+  }
+
+  container.innerHTML = html;
+}
+
+// Manipulação do Modal de Perfil
+function abrirModalPerfil() {
+  if (!perfilAtual) return;
+  document.getElementById('edit-perfil-nome').value = perfilAtual.nome || '';
+  document.getElementById('edit-perfil-localizacao').value = perfilAtual.localizacao || '';
+  document.getElementById('edit-perfil-avatar').value = perfilAtual.avatar_url || '';
+  document.getElementById('edit-perfil-bio').value = perfilAtual.bio || '';
+  document.getElementById('edit-perfil-seguidores').value = perfilAtual.seguidores || 0;
+  document.getElementById('edit-perfil-seguindo').value = perfilAtual.seguindo || 0;
+  document.getElementById('edit-perfil-pro').checked = !!perfilAtual.badge_pro;
+  document.getElementById('edit-perfil-patron').checked = !!perfilAtual.badge_patron;
+
+  const links = perfilAtual.links_sociais || {};
+  document.getElementById('link-letterboxd').value = links.letterboxd || '';
+  document.getElementById('link-instagram').value = links.instagram || '';
+  document.getElementById('link-twitter').value = links.twitter || '';
+  document.getElementById('link-github').value = links.github || '';
+
+  document.getElementById('modal-perfil-fundo').classList.add('ativo');
+}
+
+function fecharModalPerfil() {
+  document.getElementById('modal-perfil-fundo').classList.remove('ativo');
+}
+
+async function salvarPerfil(evento) {
+  evento.preventDefault();
+  const corpo = {
+    nome: document.getElementById('edit-perfil-nome').value,
+    localizacao: document.getElementById('edit-perfil-localizacao').value,
+    avatar_url: document.getElementById('edit-perfil-avatar').value,
+    bio: document.getElementById('edit-perfil-bio').value,
+    seguidores: Number(document.getElementById('edit-perfil-seguidores').value),
+    seguindo: Number(document.getElementById('edit-perfil-seguindo').value),
+    badge_pro: document.getElementById('edit-perfil-pro').checked,
+    badge_patron: document.getElementById('edit-perfil-patron').checked,
+    links_sociais: {
+      letterboxd: document.getElementById('link-letterboxd').value.trim(),
+      instagram: document.getElementById('link-instagram').value.trim(),
+      twitter: document.getElementById('link-twitter').value.trim(),
+      github: document.getElementById('link-github').value.trim(),
+    },
+    top4_midias: perfilAtual ? perfilAtual.top4_midias : '[]'
+  };
+
+  try {
+    await api('/api/perfil', { method: 'PUT', body: JSON.stringify(corpo) });
+    fecharModalPerfil();
+    carregarPerfil();
+  } catch (erro) {
+    alert('Erro ao salvar perfil: ' + erro.message);
+  }
+}
+
+// Manipulação do Modal de Top 4 Filmes
+async function abrirModalTop4() {
+  const midias = await api('/api/midias');
+  
+  let top4Atual = [];
+  try {
+    top4Atual = typeof perfilAtual.top4_midias === 'string' ? JSON.parse(perfilAtual.top4_midias) : (perfilAtual.top4_midias || []);
+  } catch (e) {
+    top4Atual = [];
+  }
+
+  for (let i = 0; i < 4; i++) {
+    const select = document.getElementById(`select-top4-slot-${i}`);
+    select.innerHTML = '<option value="">-- Nenhum selecionado --</option>' +
+      '<option value="custom">✏️ Outro filme (Personalizado)</option>' +
+      midias.map(m => `<option value="${m.id}">${escapeHtml(m.titulo)} (${m.tipo})</option>`).join('');
+
+    const val = top4Atual[i];
+    const customDiv = document.getElementById(`custom-fields-${i}`);
+
+    if (typeof val === 'number') {
+      select.value = val;
+      customDiv.style.display = 'none';
+    } else if (typeof val === 'object' && val !== null) {
+      select.value = 'custom';
+      customDiv.style.display = 'block';
+      document.getElementById(`top4-title-${i}`).value = val.titulo || '';
+      document.getElementById(`top4-capa-${i}`).value = val.capa_url || '';
+    } else {
+      select.value = '';
+      customDiv.style.display = 'none';
+    }
+
+    select.onchange = (e) => {
+      customDiv.style.display = e.target.value === 'custom' ? 'block' : 'none';
+    };
+  }
+
+  document.getElementById('modal-top4-fundo').classList.add('ativo');
+}
+
+function fecharModalTop4() {
+  document.getElementById('modal-top4-fundo').classList.remove('ativo');
+}
+
+async function salvarTop4(evento) {
+  evento.preventDefault();
+  const novosTop4 = [];
+
+  for (let i = 0; i < 4; i++) {
+    const val = document.getElementById(`select-top4-slot-${i}`).value;
+    if (!val) {
+      novosTop4.push(null);
+    } else if (val === 'custom') {
+      const titulo = document.getElementById(`top4-title-${i}`).value.trim();
+      const capa_url = document.getElementById(`top4-capa-${i}`).value.trim();
+      if (titulo || capa_url) {
+        novosTop4.push({ titulo: titulo || 'Filme Favorito', capa_url: capa_url, tipo: 'Filme' });
+      } else {
+        novosTop4.push(null);
+      }
+    } else {
+      novosTop4.push(Number(val));
+    }
+  }
+
+  try {
+    const corpo = {
+      ...perfilAtual,
+      top4_midias: novosTop4
+    };
+    await api('/api/perfil', { method: 'PUT', body: JSON.stringify(corpo) });
+    fecharModalTop4();
+    carregarPerfil();
+  } catch (erro) {
+    alert('Erro ao salvar filmes favoritos: ' + erro.message);
+  }
+}
+
+// Manipulação do Modal de Conexões (Seguidores / Seguindo)
+async function abrirModalConexoes() {
+  conexoesDados = await api('/api/perfil/conexoes');
+  renderizarConexoes('seguidores');
+  document.getElementById('modal-conexoes-fundo').classList.add('ativo');
+}
+
+function fecharModalConexoes() {
+  document.getElementById('modal-conexoes-fundo').classList.remove('ativo');
+}
+
+function renderizarConexoes(tipo) {
+  document.getElementById('tab-btn-seguidores').classList.toggle('ativa', tipo === 'seguidores');
+  document.getElementById('tab-btn-seguindo').classList.toggle('ativa', tipo === 'seguindo');
+
+  const lista = conexoesDados ? (conexoesDados[tipo] || []) : [];
+  const container = document.getElementById('lista-conexoes-conteudo');
+
+  if (!lista.length) {
+    container.innerHTML = '<p class="obs">Nenhuma conexão registrada ainda.</p>';
+    return;
+  }
+
+  container.innerHTML = lista.map((user, idx) => `
+    <div class="item-conexao-card">
+      <div class="item-conexao-info">
+        <img src="${user.avatar}" alt="" class="item-conexao-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome)}&background=1B2A4A&color=fff'">
+        <div>
+          <div class="item-conexao-nome">${escapeHtml(user.nome)}</div>
+          <div class="item-conexao-user">${escapeHtml(user.user)}</div>
+          <div class="item-conexao-bio">${escapeHtml(user.bio)}</div>
+        </div>
+      </div>
+      <button class="botao ${user.seguindo ? 'secundario' : ''}" style="padding:4px 12px; font-size:12px;" onclick="alternarSeguir(${idx}, '${tipo}')">
+        ${user.seguindo ? 'Seguindo' : '+ Seguir'}
+      </button>
+    </div>
+  `).join('');
+}
+
+function alternarSeguir(index, tipo) {
+  if (conexoesDados && conexoesDados[tipo] && conexoesDados[tipo][index]) {
+    conexoesDados[tipo][index].seguindo = !conexoesDados[tipo][index].seguindo;
+    renderizarConexoes(tipo);
+  }
+}
+
+// ---------------------------------------------------------------------
 // INICIALIZAÇÃO — conecta todos os botões e carrega a primeira tela
 // ---------------------------------------------------------------------
 
@@ -637,6 +918,20 @@ function iniciar() {
 
   preencherSelectsFormulario();
   preencherFiltrosFixos();
+
+  // Listeners do Perfil e Top 4 Filmes
+  document.getElementById('btn-abrir-modal-perfil').addEventListener('click', abrirModalPerfil);
+  document.getElementById('btn-cancelar-perfil').addEventListener('click', fecharModalPerfil);
+  document.getElementById('form-perfil').addEventListener('submit', salvarPerfil);
+
+  document.getElementById('btn-abrir-modal-top4').addEventListener('click', abrirModalTop4);
+  document.getElementById('btn-cancelar-top4').addEventListener('click', fecharModalTop4);
+  document.getElementById('form-top4').addEventListener('submit', salvarTop4);
+
+  document.getElementById('btn-abrir-modal-conexoes').addEventListener('click', abrirModalConexoes);
+  document.getElementById('btn-fechar-conexoes').addEventListener('click', fecharModalConexoes);
+  document.getElementById('tab-btn-seguidores').addEventListener('click', () => renderizarConexoes('seguidores'));
+  document.getElementById('tab-btn-seguindo').addEventListener('click', () => renderizarConexoes('seguindo'));
 
   document.getElementById('btn-nova-midia').addEventListener('click', abrirModalNova);
   document.getElementById('btn-cancelar-midia').addEventListener('click', fecharModalMidia);
