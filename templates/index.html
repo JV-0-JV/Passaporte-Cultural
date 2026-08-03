@@ -245,7 +245,15 @@
           </div>
           <div class="campo">
             <label for="midia-nota">Nota (1-5)</label>
-            <input type="number" id="midia-nota" min="1" max="5">
+            <div class="seletor-nota" id="seletor-nota" data-valor="">
+              <span class="estrela-input" data-posicao="1">★</span>
+              <span class="estrela-input" data-posicao="2">★</span>
+              <span class="estrela-input" data-posicao="3">★</span>
+              <span class="estrela-input" data-posicao="4">★</span>
+              <span class="estrela-input" data-posicao="5">★</span>
+              <button type="button" class="limpar-nota" id="limpar-nota" title="Limpar nota">✕</button>
+            </div>
+            <input type="hidden" id="midia-nota" value="">
           </div>
           <div class="campo">
             <label for="midia-progresso">Progresso</label>

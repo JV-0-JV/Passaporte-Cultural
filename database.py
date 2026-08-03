@@ -35,7 +35,7 @@ def init_db():
             tipo TEXT NOT NULL,
             idioma TEXT NOT NULL,
             status TEXT NOT NULL DEFAULT 'Quero começar',
-            nota INTEGER,
+            nota REAL,
             progresso TEXT,
             capa_url TEXT,
             repertorio INTEGER NOT NULL DEFAULT 0,

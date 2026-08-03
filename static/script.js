@@ -62,6 +62,20 @@ function escapeHtml(texto) {
   return div.innerHTML;
 }
 
+function formatarEstrelas(nota) {
+  // Aceita notas com meia-estrela (ex: 3.5). Arredonda para o meio mais
+  // próximo (0.5) antes de desenhar, caso algum valor "torto" apareça.
+  // A meia-estrela é montada com HTML/CSS (span com largura 50% sobreposto
+  // a uma estrela vazia) em vez de um caractere unicode de meia-estrela,
+  // porque glifos como ⯨ não existem na maioria das fontes.
+  const valor = Math.round(nota * 2) / 2;
+  const cheias = Math.floor(valor);
+  const temMeia = valor - cheias === 0.5;
+  const vazias = 5 - cheias - (temMeia ? 1 : 0);
+  const spanMeia = '<span class="estrela-meia">★</span>';
+  return '★'.repeat(cheias) + (temMeia ? spanMeia : '') + '☆'.repeat(Math.max(0, vazias));
+}
+
 function corIdioma(idioma) {
   let soma = 0;
   for (let i = 0; i < idioma.length; i++) soma += idioma.charCodeAt(i);
@@ -266,7 +280,7 @@ function renderizarMidias(midias) {
       <h3>${escapeHtml(m.titulo)}</h3>
       ${m.progresso ? `<div class="progresso">${escapeHtml(m.progresso)}</div>` : ''}
       <span class="selo-status ${STATUS_CLASSE[m.status] || ''}">${escapeHtml(m.status)}</span>
-      ${m.nota ? `<div class="estrelas">${'★'.repeat(m.nota)}${'☆'.repeat(5 - m.nota)}</div>` : ''}
+      ${m.nota ? `<div class="estrelas">${formatarEstrelas(m.nota)}</div>` : ''}
       <div class="ficha-rodape">
         <button class="link-acao" onclick="abrirDetalhe(${m.id})">Sessões</button>
         <button class="link-acao" onclick="abrirModalEditar(${m.id})">Editar</button>
@@ -314,7 +328,46 @@ function abrirModalNova() {
   document.getElementById('modal-midia-titulo').textContent = 'Nova mídia';
   document.getElementById('campo-tema').style.display = 'none';
   limparPainelBusca();
+  definirNotaSeletor(null);
   document.getElementById('modal-midia-fundo').classList.add('ativo');
+}
+
+// ---------- Seletor de nota (estrelas clicáveis, com suporte a meia-estrela) ----------
+
+function definirNotaSeletor(nota) {
+  const seletor = document.getElementById('seletor-nota');
+  const input = document.getElementById('midia-nota');
+  input.value = nota || '';
+  seletor.dataset.valor = nota || '';
+
+  const valor = nota ? Math.round(nota * 2) / 2 : 0;
+  seletor.querySelectorAll('.estrela-input').forEach(estrela => {
+    const posicao = Number(estrela.dataset.posicao);
+    estrela.classList.remove('cheia', 'metade');
+    if (valor >= posicao) {
+      estrela.classList.add('cheia');
+    } else if (valor >= posicao - 0.5) {
+      estrela.classList.add('metade');
+    }
+  });
+}
+
+function inicializarSeletorNota() {
+  const seletor = document.getElementById('seletor-nota');
+  if (!seletor) return;
+
+  seletor.querySelectorAll('.estrela-input').forEach(estrela => {
+    // Clicar na metade esquerda da estrela = meia nota; metade direita = nota cheia.
+    estrela.addEventListener('click', (evento) => {
+      const posicao = Number(estrela.dataset.posicao);
+      const retangulo = estrela.getBoundingClientRect();
+      const cliqueNaMetadeEsquerda = (evento.clientX - retangulo.left) < retangulo.width / 2;
+      const novaNota = cliqueNaMetadeEsquerda ? posicao - 0.5 : posicao;
+      definirNotaSeletor(novaNota);
+    });
+  });
+
+  document.getElementById('limpar-nota').addEventListener('click', () => definirNotaSeletor(null));
 }
 
 async function abrirModalEditar(id) {
@@ -324,7 +377,7 @@ async function abrirModalEditar(id) {
   document.getElementById('midia-tipo').value = m.tipo;
   document.getElementById('midia-idioma').value = m.idioma;
   document.getElementById('midia-status').value = m.status;
-  document.getElementById('midia-nota').value = m.nota || '';
+  definirNotaSeletor(m.nota || null);
   document.getElementById('midia-progresso').value = m.progresso || '';
   document.getElementById('midia-capa').value = m.capa_url || '';
   document.getElementById('midia-repertorio').checked = !!m.repertorio;
@@ -695,7 +748,7 @@ function renderizarTop4(top4List) {
     if (item && (item.capa_url || item.titulo)) {
       const titulo = escapeHtml(item.titulo || 'Filme Favorito');
       const capa = item.capa_url || '';
-      const nota = item.nota ? '★'.repeat(item.nota) : '';
+      const nota = item.nota ? formatarEstrelas(item.nota) : '';
 
       html += `
         <div class="top4-poster-item" onclick="abrirModalTop4()">
@@ -844,6 +897,7 @@ function iniciar() {
 
   preencherSelectsFormulario();
   preencherFiltrosFixos();
+  inicializarSeletorNota();
 
   // Listeners do Perfil (Foto/Nome) — usa ?. pois o botão de abrir pode não existir no HTML
   document.getElementById('btn-abrir-modal-perfil')?.addEventListener('click', abrirModalPerfil);
