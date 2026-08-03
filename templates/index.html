@@ -147,6 +147,15 @@
         <select id="filtro-status">
           <option value="">Todos os status</option>
         </select>
+        <select id="filtro-ordenar">
+          <option value="recentes">Adicionados recentemente</option>
+          <option value="antigos">Adicionados há mais tempo</option>
+          <option value="titulo_asc">Título (A-Z)</option>
+          <option value="titulo_desc">Título (Z-A)</option>
+          <option value="nota_desc">Nota (maior primeiro)</option>
+          <option value="nota_asc">Nota (menor primeiro)</option>
+          <option value="sessao_recente">Sessão mais recente</option>
+        </select>
       </div>
 
       <div class="grade-midias" id="grade-midias"></div>
@@ -296,6 +305,14 @@
         <div class="campo" id="campo-sessao-quantidade" style="display:none;">
           <label for="sessao-quantidade" id="rotulo-sessao-quantidade">Quantidade</label>
           <input type="number" id="sessao-quantidade" min="1" placeholder="0">
+        </div>
+        <div class="campo" id="campo-sessao-paginas" style="display:none;">
+          <label for="sessao-paginas">Páginas</label>
+          <input type="number" id="sessao-paginas" min="1" placeholder="0">
+        </div>
+        <div class="campo" id="campo-sessao-palavras" style="display:none;">
+          <label for="sessao-palavras">Palavras</label>
+          <input type="number" id="sessao-palavras" min="1" placeholder="0">
         </div>
         <button class="botao" id="btn-registrar-sessao">Registrar</button>
       </div>

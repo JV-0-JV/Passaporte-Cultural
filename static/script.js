@@ -21,12 +21,15 @@ const STATUS_CLASSE = {
 const IDIOMAS_SUGERIDOS = ['Japonês', 'Inglês', 'Espanhol', 'Coreano', 'Francês', 'Alemão', 'Italiano', 'Mandarim', 'Russo', 'Sueco'];
 const CORES_IDIOMA = ['#1B2A4A', '#A63A34', '#3F5B4D', '#B08D3E', '#6B4E71', '#B0562C'];
 
-// Cada tipo de mídia tem uma unidade de progresso diferente (mesma ideia do app.py)
-const UNIDADE_TIPO = {
-  'Série': 'episódios', 'Anime': 'episódios',
-  'Livro': 'páginas', 'Mangá': 'páginas', 'HQ': 'páginas',
-  'Novel': 'palavras',
-};
+// Tipos que registram progresso em episódios (campo único "Quantidade").
+const TIPOS_EPISODIOS = ['Série', 'Anime'];
+
+// Tipos em que a sessão pode trazer páginas E palavras ao mesmo tempo
+// (os dois campos aparecem juntos, sem precisar escolher um ou outro).
+const TIPOS_PAGINAS_E_PALAVRAS = ['Livro', 'Mangá', 'HQ', 'Novel'];
+
+// Visual Novel só registra palavras — não tem o campo de páginas.
+const TIPOS_SO_PALAVRAS = ['Visual Novel'];
 
 // Tipos que não têm uma API de busca automática configurada (ex: "Outro")
 const TIPOS_SEM_BUSCA = ['Outro'];
@@ -233,10 +236,12 @@ async function carregarBiblioteca() {
   const idioma = document.getElementById('filtro-idioma').value;
   const tipo = document.getElementById('filtro-tipo').value;
   const status = document.getElementById('filtro-status').value;
+  const ordenar = document.getElementById('filtro-ordenar').value;
   if (busca) params.set('busca', busca);
   if (idioma) params.set('idioma', idioma);
   if (tipo) params.set('tipo', tipo);
   if (status) params.set('status', status);
+  if (ordenar) params.set('ordenar', ordenar);
 
   const midias = await api('/api/midias?' + params.toString());
   renderizarMidias(midias);
@@ -442,15 +447,29 @@ async function abrirDetalhe(id) {
   document.getElementById('sessao-data').value = new Date().toISOString().slice(0, 10);
   document.getElementById('sessao-minutos').value = '';
   document.getElementById('sessao-quantidade').value = '';
+  document.getElementById('sessao-paginas').value = '';
+  document.getElementById('sessao-palavras').value = '';
 
-  const unidade = UNIDADE_TIPO[m.tipo];
   const campoQtd = document.getElementById('campo-sessao-quantidade');
-  if (unidade) {
+  const campoPaginas = document.getElementById('campo-sessao-paginas');
+  const campoPalavras = document.getElementById('campo-sessao-palavras');
+
+  campoQtd.style.display = 'none';
+  campoPaginas.style.display = 'none';
+  campoPalavras.style.display = 'none';
+
+  if (TIPOS_EPISODIOS.includes(m.tipo)) {
+    // Série, Anime: um único campo, em episódios.
     campoQtd.style.display = 'block';
-    document.getElementById('rotulo-sessao-quantidade').textContent =
-      unidade.charAt(0).toUpperCase() + unidade.slice(1);
-  } else {
-    campoQtd.style.display = 'none';
+    document.getElementById('rotulo-sessao-quantidade').textContent = 'Episódios';
+  } else if (TIPOS_PAGINAS_E_PALAVRAS.includes(m.tipo)) {
+    // Livro, Mangá, HQ, Novel: os dois campos aparecem juntos, cada um
+    // pode ser preenchido independente do outro.
+    campoPaginas.style.display = 'block';
+    campoPalavras.style.display = 'block';
+  } else if (TIPOS_SO_PALAVRAS.includes(m.tipo)) {
+    // Visual Novel: só o campo de palavras, sem o de páginas.
+    campoPalavras.style.display = 'block';
   }
 
   document.getElementById('modal-detalhe-fundo').classList.add('ativo');
@@ -462,22 +481,33 @@ function renderizarAtividades(atividades) {
     lista.innerHTML = '<p class="obs">Nenhuma sessão registrada ainda.</p>';
     return;
   }
-  lista.innerHTML = atividades.map(a => `
+  lista.innerHTML = atividades.map(a => {
+    const partes = [];
+    if (a.quantidade) partes.push(`${a.quantidade} episódios`);
+    if (a.paginas) partes.push(`${a.paginas} páginas`);
+    if (a.palavras) partes.push(`${a.palavras} palavras`);
+    const extra = partes.length ? ` · ${partes.join(' · ')}` : '';
+    return `
     <div class="item-atividade">
-      <span>${formatarDataCurta(a.data)} — ${a.minutos} min${a.quantidade ? ` · ${a.quantidade}` : ''} ${a.observacao ? `<span class="obs">(${escapeHtml(a.observacao)})</span>` : ''}</span>
+      <span>${formatarDataCurta(a.data)} — ${a.minutos} min${extra} ${a.observacao ? `<span class="obs">(${escapeHtml(a.observacao)})</span>` : ''}</span>
       <button class="link-acao apagar" onclick="apagarAtividade(${a.id})">Apagar</button>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 async function registrarSessao() {
   const data = document.getElementById('sessao-data').value;
   const minutos = document.getElementById('sessao-minutos').value;
   const quantidade = document.getElementById('sessao-quantidade').value;
+  const paginas = document.getElementById('sessao-paginas').value;
+  const palavras = document.getElementById('sessao-palavras').value;
   if (!data || !minutos) { alert('Preencha data e minutos.'); return; }
 
   const corpo = { data, minutos: Number(minutos) };
   if (quantidade) corpo.quantidade = Number(quantidade);
+  if (paginas) corpo.paginas = Number(paginas);
+  if (palavras) corpo.palavras = Number(palavras);
 
   await api(`/api/midias/${midiaDetalheAtual}/atividades`, {
     method: 'POST',
@@ -487,6 +517,8 @@ async function registrarSessao() {
   renderizarAtividades(m.atividades);
   document.getElementById('sessao-minutos').value = '';
   document.getElementById('sessao-quantidade').value = '';
+  document.getElementById('sessao-paginas').value = '';
+  document.getElementById('sessao-palavras').value = '';
   carregarBiblioteca();
 }
 
@@ -833,6 +865,7 @@ function iniciar() {
   document.getElementById('filtro-idioma').addEventListener('change', carregarBiblioteca);
   document.getElementById('filtro-tipo').addEventListener('change', carregarBiblioteca);
   document.getElementById('filtro-status').addEventListener('change', carregarBiblioteca);
+  document.getElementById('filtro-ordenar').addEventListener('change', carregarBiblioteca);
 
   document.getElementById('btn-registrar-sessao').addEventListener('click', registrarSessao);
   document.getElementById('btn-fechar-detalhe').addEventListener('click', () => {

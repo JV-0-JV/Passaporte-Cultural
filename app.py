@@ -42,35 +42,57 @@ def index():
 # CRUD DE MÍDIAS
 # ---------------------------------------------------------------------------
 
+# Opções de ordenação aceitas em GET /api/midias?ordenar=...
+# A chave é o valor que o frontend manda; o valor é o trecho usado no ORDER BY.
+# "IS NULL" antes do campo joga quem não tem nota/sessão pro final da lista.
+ORDENACOES = {
+    'recentes': 'datetime(m.data_criacao) DESC',
+    'antigos': 'datetime(m.data_criacao) ASC',
+    'titulo_asc': 'm.titulo COLLATE NOCASE ASC',
+    'titulo_desc': 'm.titulo COLLATE NOCASE DESC',
+    'nota_desc': 'm.nota IS NULL, m.nota DESC',
+    'nota_asc': 'm.nota IS NULL, m.nota ASC',
+    'sessao_recente': 'ultima_sessao IS NULL, ultima_sessao DESC',
+}
+
+
 @app.route('/api/midias', methods=['GET'])
 def listar_midias():
     """Lista mídias, com filtros opcionais por idioma, tipo, status,
-    repertório (?repertorio=1) e busca por texto no título (?busca=)."""
+    repertório (?repertorio=1), busca por texto no título (?busca=) e
+    ordenação (?ordenar=), veja ORDENACOES acima para as opções aceitas."""
     idioma = request.args.get('idioma')
     tipo = request.args.get('tipo')
     status = request.args.get('status')
     repertorio = request.args.get('repertorio')
     busca = request.args.get('busca')
+    ordenar = request.args.get('ordenar', 'recentes')
 
-    query = 'SELECT * FROM midias WHERE 1=1'
+    # "ultima_sessao" é a data da sessão mais recente registrada para a
+    # mídia (ou NULL se nunca foi registrada nenhuma), usada tanto para
+    # exibir quanto para permitir ordenar por "sessão mais recente".
+    query = '''
+        SELECT m.*, (SELECT MAX(data) FROM atividades WHERE midia_id = m.id) AS ultima_sessao
+        FROM midias m WHERE 1=1
+    '''
     params = []
 
     if idioma:
-        query += ' AND idioma = ?'
+        query += ' AND m.idioma = ?'
         params.append(idioma)
     if tipo:
-        query += ' AND tipo = ?'
+        query += ' AND m.tipo = ?'
         params.append(tipo)
     if status:
-        query += ' AND status = ?'
+        query += ' AND m.status = ?'
         params.append(status)
     if repertorio == '1':
-        query += ' AND repertorio = 1'
+        query += ' AND m.repertorio = 1'
     if busca:
-        query += ' AND titulo LIKE ?'
+        query += ' AND m.titulo LIKE ?'
         params.append(f'%{busca}%')
 
-    query += ' ORDER BY datetime(data_criacao) DESC'
+    query += ' ORDER BY ' + ORDENACOES.get(ordenar, ORDENACOES['recentes'])
 
     conn = get_db()
     linhas = conn.execute(query, params).fetchall()
@@ -192,13 +214,24 @@ def registrar_atividade(midia_id):
         conn.close()
         return jsonify({'erro': 'Mídia não encontrada'}), 404
 
+    # "quantidade" só é usada por tipos com uma única unidade de progresso
+    # (ex: Série/Anime em episódios).
     quantidade = dados.get('quantidade')
     quantidade = int(quantidade) if quantidade not in (None, '') else None
 
+    # "paginas" e "palavras" são campos independentes: a mesma sessão pode
+    # trazer os dois preenchidos (ex: Livro, Mangá, HQ, Novel) ou só
+    # "palavras" (Visual Novel).
+    paginas = dados.get('paginas')
+    paginas = int(paginas) if paginas not in (None, '') else None
+
+    palavras = dados.get('palavras')
+    palavras = int(palavras) if palavras not in (None, '') else None
+
     cursor = conn.execute('''
-        INSERT INTO atividades (midia_id, data, minutos, quantidade, observacao)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (midia_id, dados['data'], int(dados['minutos']), quantidade, dados.get('observacao')))
+        INSERT INTO atividades (midia_id, data, minutos, quantidade, paginas, palavras, observacao)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (midia_id, dados['data'], int(dados['minutos']), quantidade, paginas, palavras, dados.get('observacao')))
     conn.commit()
     novo_id = cursor.lastrowid
     conn.close()
@@ -218,18 +251,19 @@ def deletar_atividade(atividade_id):
 # ESTATÍSTICAS (usadas no Painel / Dashboard)
 # ---------------------------------------------------------------------------
 
-# Cada tipo de mídia tem uma unidade de progresso diferente. Isso é usado
-# tanto para o detalhamento por idioma quanto para o rótulo do campo
-# "quantidade" na tela de registrar sessão.
+# Cada tipo de mídia tem uma (ou duas) unidades de progresso diferentes.
+# Isso é usado no detalhamento por idioma do Painel.
 TIPOS_EPISODIOS = ('Série', 'Anime')
-TIPOS_PAGINAS = ('Livro', 'Mangá', 'HQ')
-TIPOS_PALAVRAS = ('Novel',)
 
-
-def _caso_sql(tipos):
-    """Monta um trecho SQL tipo: CASE WHEN m.tipo IN ('Série','Anime') THEN a.quantidade ELSE 0 END"""
-    lista = ','.join(f"'{t}'" for t in tipos)
-    return f"COALESCE(SUM(CASE WHEN m.tipo IN ({lista}) THEN a.quantidade ELSE 0 END), 0)"
+# "paginas" e "palavras" são colunas dedicadas em atividades: Livro, Mangá,
+# HQ e Novel podem ter as duas preenchidas na mesma sessão; Visual Novel só
+# preenche "palavras". Por isso basta somar as colunas direto, sem precisar
+# descobrir qual era a unidade da sessão.
+_TIPOS_EPISODIOS_SQL = ','.join("'{}'".format(t) for t in TIPOS_EPISODIOS)
+_EPISODIOS_SQL = (
+    "COALESCE(SUM(CASE WHEN m.tipo IN (" + _TIPOS_EPISODIOS_SQL +
+    ") THEN a.quantidade ELSE 0 END), 0)"
+)
 
 
 @app.route('/api/estatisticas', methods=['GET'])
@@ -255,9 +289,9 @@ def estatisticas():
             m.idioma AS idioma,
             COALESCE(SUM(a.minutos), 0) AS minutos,
             COUNT(DISTINCT m.id) AS midias,
-            {_caso_sql(TIPOS_EPISODIOS)} AS episodios,
-            {_caso_sql(TIPOS_PAGINAS)} AS paginas,
-            {_caso_sql(TIPOS_PALAVRAS)} AS palavras
+            {_EPISODIOS_SQL} AS episodios,
+            COALESCE(SUM(a.paginas), 0) AS paginas,
+            COALESCE(SUM(a.palavras), 0) AS palavras
         FROM midias m LEFT JOIN atividades a ON a.midia_id = m.id
         GROUP BY m.idioma
         ORDER BY minutos DESC
@@ -457,13 +491,29 @@ def _restaurar_backup(dados):
             m.get('data_inicio'), m.get('data_fim'),
         ))
 
+    tipo_por_midia_id = {m.get('id'): m.get('tipo') for m in midias}
+
     for a in atividades:
+        paginas = a.get('paginas')
+        palavras = a.get('palavras')
+
+        # Compatibilidade com backups feitos antes de "paginas"/"palavras"
+        # existirem como colunas próprias: se o backup só trouxer o par
+        # antigo quantidade+unidade, jogamos o valor pro campo certo.
+        if paginas is None and palavras is None and a.get('quantidade') is not None:
+            tipo = tipo_por_midia_id.get(a.get('midia_id'))
+            unidade = a.get('unidade')
+            if unidade == 'páginas' or (unidade is None and tipo in ('Livro', 'Mangá', 'HQ')):
+                paginas = a.get('quantidade')
+            elif unidade == 'palavras' or (unidade is None and tipo in ('Novel', 'Visual Novel')):
+                palavras = a.get('quantidade')
+
         conn.execute('''
-            INSERT INTO atividades (id, midia_id, data, minutos, quantidade, observacao)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO atividades (id, midia_id, data, minutos, quantidade, paginas, palavras, observacao)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             a.get('id'), a.get('midia_id'), a.get('data'), a.get('minutos'),
-            a.get('quantidade'), a.get('observacao'),
+            a.get('quantidade'), paginas, palavras, a.get('observacao'),
         ))
 
     if perfil:

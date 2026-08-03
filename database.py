@@ -80,6 +80,62 @@ def init_db():
         conn.execute('ALTER TABLE atividades ADD COLUMN quantidade INTEGER')
         conn.commit()
 
+    # "unidade" guarda em que unidade a "quantidade" daquela sessão foi
+    # registrada (ex: 'páginas' ou 'palavras'). Esse campo é da época em
+    # que a sessão escolhia UMA unidade por vez com um seletor; hoje ele só
+    # é mantido para não perder sessões antigas (veja migração abaixo).
+    if 'unidade' not in colunas:
+        conn.execute('ALTER TABLE atividades ADD COLUMN unidade TEXT')
+        conn.commit()
+
+    # "paginas" e "palavras" são campos dedicados e independentes: uma
+    # sessão de Livro/Mangá/HQ/Novel pode ter as duas quantidades juntas
+    # (ex: avançou 20 páginas e também leu 4.000 palavras naquele dia), e
+    # Visual Novel usa só "palavras". Substituem o antigo par
+    # "quantidade" + "unidade" para esses tipos.
+    paginas_eh_nova = 'paginas' not in colunas
+    palavras_eh_nova = 'palavras' not in colunas
+
+    if paginas_eh_nova:
+        conn.execute('ALTER TABLE atividades ADD COLUMN paginas INTEGER')
+        conn.commit()
+    if palavras_eh_nova:
+        conn.execute('ALTER TABLE atividades ADD COLUMN palavras INTEGER')
+        conn.commit()
+
+    if paginas_eh_nova or palavras_eh_nova:
+        # Migração única: sessões registradas antes dessa mudança guardavam
+        # a quantidade de Livro/Mangá/HQ/Novel/Visual Novel no campo
+        # genérico "quantidade" (com "unidade" indicando se era páginas ou
+        # palavras, quando preenchida). Copiamos esse valor para o campo
+        # dedicado certo. Série/Anime não entram aqui: continuam usando
+        # "quantidade" normalmente, para episódios.
+        conn.execute('''
+            UPDATE atividades
+            SET paginas = quantidade
+            WHERE quantidade IS NOT NULL
+              AND paginas IS NULL
+              AND midia_id IN (SELECT id FROM midias WHERE tipo IN ('Livro', 'Mangá', 'HQ'))
+              AND (unidade IS NULL OR unidade = 'páginas')
+        ''')
+        conn.execute('''
+            UPDATE atividades
+            SET palavras = quantidade
+            WHERE quantidade IS NOT NULL
+              AND palavras IS NULL
+              AND midia_id IN (SELECT id FROM midias WHERE tipo IN ('Novel', 'Visual Novel'))
+              AND (unidade IS NULL OR unidade = 'palavras')
+        ''')
+        conn.execute('''
+            UPDATE atividades
+            SET palavras = quantidade
+            WHERE quantidade IS NOT NULL
+              AND palavras IS NULL
+              AND midia_id IN (SELECT id FROM midias WHERE tipo IN ('Livro', 'Mangá', 'HQ'))
+              AND unidade = 'palavras'
+        ''')
+        conn.commit()
+
     # Garante que o perfil inicial (ID 1) existe no banco de dados
     existente_perfil = conn.execute('SELECT id FROM perfil WHERE id = 1').fetchone()
     if not existente_perfil:
