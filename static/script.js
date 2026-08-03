@@ -809,10 +809,10 @@ function iniciar() {
   preencherSelectsFormulario();
   preencherFiltrosFixos();
 
-  // Listeners do Perfil (Foto/Nome) e Top 4 Filmes
-  document.getElementById('btn-abrir-modal-perfil').addEventListener('click', abrirModalPerfil);
-  document.getElementById('btn-cancelar-perfil').addEventListener('click', fecharModalPerfil);
-  document.getElementById('form-perfil').addEventListener('submit', salvarPerfil);
+  // Listeners do Perfil (Foto/Nome) — usa ?. pois o botão de abrir pode não existir no HTML
+  document.getElementById('btn-abrir-modal-perfil')?.addEventListener('click', abrirModalPerfil);
+  document.getElementById('btn-cancelar-perfil')?.addEventListener('click', fecharModalPerfil);
+  document.getElementById('form-perfil')?.addEventListener('submit', salvarPerfil);
 
   document.getElementById('btn-abrir-modal-top4').addEventListener('click', abrirModalTop4);
   document.getElementById('btn-cancelar-top4').addEventListener('click', fecharModalTop4);
@@ -853,21 +853,9 @@ document.addEventListener('DOMContentLoaded', iniciar);
 
 // =====================================================================
 // TEMA CLARO / ESCURO
-// O atributo data-theme é aplicado no <html> (raiz) para garantir que
-// TODOS os elementos do site sejam afetados pelas regras CSS.
-// A preferência é salva no localStorage para persistir entre visitas.
+// A aplicação inicial fica no <head> do HTML (sem flash).
+// Aqui só a função de toggle chamada pelo botão.
 // =====================================================================
-
-(function aplicarTemaSalvo() {
-  // Lê o tema salvo; se não houver, usa preferência do sistema operacional
-  const temaSalvo = localStorage.getItem('passaporte-tema');
-  const prefereSistema = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const temaInicial = temaSalvo || (prefereSistema ? 'dark' : 'light');
-
-  if (temaInicial === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  }
-})();
 
 function alternarTema() {
   const html = document.documentElement;

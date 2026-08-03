@@ -6,6 +6,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Passaporte Cultural</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <!-- Aplica o tema ANTES do CSS renderizar para evitar flash de tema errado -->
+  <script>
+    (function () {
+      var tema = localStorage.getItem('passaporte-tema');
+      // Se não houver preferência salva, usa a do sistema operacional
+      if (!tema) {
+        tema = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      if (tema === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+
   <script src="{{ url_for('static', filename='chart.umd.min.js') }}"></script>
 </head>
 
