@@ -1,372 +1,379 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Passaporte Cultural</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<script src="{{ url_for('static', filename='chart.umd.min.js') }}"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Passaporte Cultural</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='chart.umd.min.js') }}"></script>
 </head>
+
 <body>
 
-<header class="topo">
-  <div class="topo-conteudo">
-    <div class="marca">
-      <h1>Passaporte Cultural</h1>
-      <span class="subtitulo">seu diário de imersão em idiomas</span>
-    </div>
-    <span class="selo-logo">ESTABELECIDO 2026</span>
-
-    <!-- Botão de alternância de tema claro/escuro -->
-    <button
-      id="btn-toggle-tema"
-      class="btn-tema"
-      aria-label="Alternar tema claro/escuro"
-      title="Alternar tema"
-    >
-      <span class="btn-tema-icone btn-tema-sol">☀️</span>
-      <span class="btn-tema-icone btn-tema-lua">🌙</span>
-    </button>
-  </div>
-  <nav class="abas">
-    <button class="aba ativa" data-vista="painel">Painel</button>
-    <button class="aba" data-vista="biblioteca">Biblioteca</button>
-    <button class="aba" data-vista="repertorio">Repertório</button>
-    <button class="aba" data-vista="backup">Backup</button>
-  </nav>
-</header>
-
-<main>
-
-  <!-- ================= PAINEL ================= -->
-  <section id="vista-painel" class="vista ativa">
-    <div class="cabecalho-secao">
-      <div>
-        <h2>Painel</h2>
-        <p>Visão geral da sua jornada de imersão e perfil cultural.</p>
+  <header class="topo">
+    <div class="topo-conteudo">
+      <div class="marca">
+        <h1>Passaporte Cultural</h1>
       </div>
-    </div>
 
-    <!-- ================= FAVORITOS (TOP 4) ================= -->
-    <div class="painel-card perfil-card" style="margin-bottom: 24px;">
-      <div class="top4-secao-container">
-        <div class="top4-header">
-          <div class="top4-titulo-wrapper">
-            <h3>Favoritos</h3>
-            <span class="selo-top4">TOP 4</span>
+      <!-- Botão de alternância de tema claro/escuro -->
+      <button id="btn-toggle-tema" class="btn-tema" aria-label="Alternar tema claro/escuro" title="Alternar tema">
+        <span class="btn-tema-icone btn-tema-sol">☀️</span>
+        <span class="btn-tema-icone btn-tema-lua">🌙</span>
+      </button>
+    </div>
+    <nav class="abas">
+      <button class="aba ativa" data-vista="painel">Painel</button>
+      <button class="aba" data-vista="biblioteca">Biblioteca</button>
+      <button class="aba" data-vista="repertorio">Repertório</button>
+      <button class="aba" data-vista="backup">Backup</button>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- ================= PAINEL ================= -->
+    <section id="vista-painel" class="vista ativa">
+      <div class="cabecalho-secao">
+        <div>
+          <h2>Painel</h2>
+          <p>Visão geral da sua jornada de imersão e perfil cultural.</p>
+        </div>
+      </div>
+
+      <!-- ================= FAVORITOS (TOP 4) ================= -->
+      <div class="painel-card perfil-card" style="margin-bottom: 24px;">
+        <div class="top4-secao-container">
+          <div class="top4-header">
+            <div class="top4-titulo-wrapper">
+              <h3>Favoritos</h3>
+              <span class="selo-top4">TOP 4</span>
+            </div>
+            <button class="link-acao" id="btn-abrir-modal-top4">⚙️ Gerenciar Top 4</button>
           </div>
-          <button class="link-acao" id="btn-abrir-modal-top4">⚙️ Gerenciar Top 4</button>
+
+          <div class="top4-grid-posters" id="top4-posters-grid">
+            <!-- Os 4 pôsteres verticais serão renderizados pelo JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <div class="grade-stamps" id="stamps-estatisticas"></div>
+
+      <div class="grade-graficos">
+        <div class="painel-card">
+          <h3>Horas por idioma</h3>
+          <canvas id="grafico-idiomas" height="220"></canvas>
+        </div>
+        <div class="painel-card">
+          <h3>Mídias por tipo</h3>
+          <canvas id="grafico-tipos" height="220"></canvas>
+        </div>
+      </div>
+
+      <div class="painel-card" style="margin-top:20px;">
+        <h3>Atividade nos últimos 7 dias</h3>
+        <canvas id="grafico-semana" height="120"></canvas>
+      </div>
+
+      <div class="painel-card" style="margin-top:20px;">
+        <h3>Mapa de atividade (últimos 12 meses)</h3>
+        <div id="heatmap-container" class="heatmap-container"></div>
+        <div class="heatmap-legenda">
+          <span>Menos</span>
+          <span class="heatmap-quadrado nivel-0"></span>
+          <span class="heatmap-quadrado nivel-1"></span>
+          <span class="heatmap-quadrado nivel-2"></span>
+          <span class="heatmap-quadrado nivel-3"></span>
+          <span class="heatmap-quadrado nivel-4"></span>
+          <span>Mais</span>
+        </div>
+      </div>
+
+      <div class="painel-card" style="margin-top:20px;">
+        <h3>Detalhamento por idioma</h3>
+        <div style="overflow-x:auto;">
+          <table class="tabela-idiomas" id="tabela-detalhamento-idioma">
+            <thead>
+              <tr>
+                <th>Idioma</th>
+                <th>Horas</th>
+                <th>Mídias</th>
+                <th>Episódios</th>
+                <th>Páginas</th>
+                <th>Palavras</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= BIBLIOTECA ================= -->
+    <section id="vista-biblioteca" class="vista">
+      <div class="cabecalho-secao">
+        <div>
+          <h2>Biblioteca</h2>
+          <p>Todas as mídias que você está usando para imersão.</p>
+        </div>
+        <button class="botao" id="btn-nova-midia">+ Nova mídia</button>
+      </div>
+
+      <div class="filtros">
+        <input type="text" id="filtro-busca" placeholder="Buscar por título...">
+        <select id="filtro-idioma">
+          <option value="">Todos os idiomas</option>
+        </select>
+        <select id="filtro-tipo">
+          <option value="">Todos os tipos</option>
+        </select>
+        <select id="filtro-status">
+          <option value="">Todos os status</option>
+        </select>
+      </div>
+
+      <div class="grade-midias" id="grade-midias"></div>
+    </section>
+
+    <!-- ================= REPERTÓRIO ================= -->
+    <section id="vista-repertorio" class="vista">
+      <div class="cabecalho-secao">
+        <div>
+          <h2>Repertório sociocultural</h2>
+          <p>Mídias marcadas como repertório, organizadas por tema — ótimo para revisar antes de uma redação.</p>
+        </div>
+        <button class="botao secundario" id="btn-exportar-repertorio">Exportar como texto</button>
+      </div>
+      <div id="lista-repertorio"></div>
+    </section>
+
+    <!-- ================= BACKUP ================= -->
+    <section id="vista-backup" class="vista">
+      <div class="cabecalho-secao">
+        <div>
+          <h2>Backup</h2>
+          <p>Seus dados ficam só no seu computador. Use esta tela para guardar uma cópia de segurança.</p>
+        </div>
+      </div>
+
+      <div class="cartao-backup">
+        <h3>Exportar</h3>
+        <p>Baixa um arquivo .json com todas as suas mídias e sessões registradas.</p>
+        <button class="botao" id="btn-exportar-backup">Baixar backup</button>
+      </div>
+
+      <div class="cartao-backup">
+        <h3>Importar</h3>
+        <p class="aviso">Atenção: importar um backup <strong>substitui</strong> todos os dados atuais.</p>
+        <input type="file" id="input-importar-backup" accept="application/json">
+      </div>
+
+      <div class="cartao-backup">
+        <h3>Google Drive</h3>
+        <p>Sincronize seu backup direto com o Google Drive, sem precisar baixar/subir arquivo manualmente.</p>
+        <div id="drive-status" class="drive-status"></div>
+        <div id="drive-acoes" style="display:none; gap:10px; margin-top:10px;">
+          <button class="botao" id="btn-drive-enviar">Enviar para o Drive</button>
+          <button class="botao secundario" id="btn-drive-baixar">Baixar do Drive</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>Passaporte Cultural — projeto acadêmico, dados salvos localmente em SQLite.</footer>
+
+  <!-- ================= MODAL: CRIAR/EDITAR MÍDIA ================= -->
+  <div class="modal-fundo" id="modal-midia-fundo">
+    <div class="modal">
+      <h2 id="modal-midia-titulo">Nova mídia</h2>
+      <form id="form-midia">
+        <input type="hidden" id="midia-id">
+
+        <div class="linha-2">
+          <div class="campo">
+            <label for="midia-tipo">Tipo</label>
+            <select id="midia-tipo" required></select>
+          </div>
+          <div class="campo">
+            <label for="midia-idioma">Idioma</label>
+            <input type="text" id="midia-idioma" list="lista-idiomas" required placeholder="ex: Japonês">
+            <datalist id="lista-idiomas"></datalist>
+          </div>
         </div>
 
-        <div class="top4-grid-posters" id="top4-posters-grid">
-          <!-- Os 4 pôsteres verticais serão renderizados pelo JavaScript -->
-        </div>
-      </div>
-    </div>
-
-    <div class="grade-stamps" id="stamps-estatisticas"></div>
-
-    <div class="grade-graficos">
-      <div class="painel-card">
-        <h3>Horas por idioma</h3>
-        <canvas id="grafico-idiomas" height="220"></canvas>
-      </div>
-      <div class="painel-card">
-        <h3>Mídias por tipo</h3>
-        <canvas id="grafico-tipos" height="220"></canvas>
-      </div>
-    </div>
-
-    <div class="painel-card" style="margin-top:20px;">
-      <h3>Atividade nos últimos 7 dias</h3>
-      <canvas id="grafico-semana" height="120"></canvas>
-    </div>
-
-    <div class="painel-card" style="margin-top:20px;">
-      <h3>Mapa de atividade (últimos 12 meses)</h3>
-      <div id="heatmap-container" class="heatmap-container"></div>
-      <div class="heatmap-legenda">
-        <span>Menos</span>
-        <span class="heatmap-quadrado nivel-0"></span>
-        <span class="heatmap-quadrado nivel-1"></span>
-        <span class="heatmap-quadrado nivel-2"></span>
-        <span class="heatmap-quadrado nivel-3"></span>
-        <span class="heatmap-quadrado nivel-4"></span>
-        <span>Mais</span>
-      </div>
-    </div>
-
-    <div class="painel-card" style="margin-top:20px;">
-      <h3>Detalhamento por idioma</h3>
-      <div style="overflow-x:auto;">
-        <table class="tabela-idiomas" id="tabela-detalhamento-idioma">
-          <thead>
-            <tr>
-              <th>Idioma</th><th>Horas</th><th>Mídias</th>
-              <th>Episódios</th><th>Páginas</th><th>Palavras</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= BIBLIOTECA ================= -->
-  <section id="vista-biblioteca" class="vista">
-    <div class="cabecalho-secao">
-      <div>
-        <h2>Biblioteca</h2>
-        <p>Todas as mídias que você está usando para imersão.</p>
-      </div>
-      <button class="botao" id="btn-nova-midia">+ Nova mídia</button>
-    </div>
-
-    <div class="filtros">
-      <input type="text" id="filtro-busca" placeholder="Buscar por título...">
-      <select id="filtro-idioma"><option value="">Todos os idiomas</option></select>
-      <select id="filtro-tipo"><option value="">Todos os tipos</option></select>
-      <select id="filtro-status"><option value="">Todos os status</option></select>
-    </div>
-
-    <div class="grade-midias" id="grade-midias"></div>
-  </section>
-
-  <!-- ================= REPERTÓRIO ================= -->
-  <section id="vista-repertorio" class="vista">
-    <div class="cabecalho-secao">
-      <div>
-        <h2>Repertório sociocultural</h2>
-        <p>Mídias marcadas como repertório, organizadas por tema — ótimo para revisar antes de uma redação.</p>
-      </div>
-      <button class="botao secundario" id="btn-exportar-repertorio">Exportar como texto</button>
-    </div>
-    <div id="lista-repertorio"></div>
-  </section>
-
-  <!-- ================= BACKUP ================= -->
-  <section id="vista-backup" class="vista">
-    <div class="cabecalho-secao">
-      <div>
-        <h2>Backup</h2>
-        <p>Seus dados ficam só no seu computador. Use esta tela para guardar uma cópia de segurança.</p>
-      </div>
-    </div>
-
-    <div class="cartao-backup">
-      <h3>Exportar</h3>
-      <p>Baixa um arquivo .json com todas as suas mídias e sessões registradas.</p>
-      <button class="botao" id="btn-exportar-backup">Baixar backup</button>
-    </div>
-
-    <div class="cartao-backup">
-      <h3>Importar</h3>
-      <p class="aviso">Atenção: importar um backup <strong>substitui</strong> todos os dados atuais.</p>
-      <input type="file" id="input-importar-backup" accept="application/json">
-    </div>
-
-    <div class="cartao-backup">
-      <h3>Google Drive</h3>
-      <p>Sincronize seu backup direto com o Google Drive, sem precisar baixar/subir arquivo manualmente.</p>
-      <div id="drive-status" class="drive-status"></div>
-      <div id="drive-acoes" style="display:none; gap:10px; margin-top:10px;">
-        <button class="botao" id="btn-drive-enviar">Enviar para o Drive</button>
-        <button class="botao secundario" id="btn-drive-baixar">Baixar do Drive</button>
-      </div>
-    </div>
-  </section>
-
-</main>
-
-<footer>Passaporte Cultural — projeto acadêmico, dados salvos localmente em SQLite.</footer>
-
-<!-- ================= MODAL: CRIAR/EDITAR MÍDIA ================= -->
-<div class="modal-fundo" id="modal-midia-fundo">
-  <div class="modal">
-    <h2 id="modal-midia-titulo">Nova mídia</h2>
-    <form id="form-midia">
-      <input type="hidden" id="midia-id">
-
-      <div class="linha-2">
         <div class="campo">
-          <label for="midia-tipo">Tipo</label>
-          <select id="midia-tipo" required></select>
+          <label for="midia-titulo">Título</label>
+          <div class="linha-busca">
+            <input type="text" id="midia-titulo" required placeholder="ex: Kiki's Delivery Service">
+            <button type="button" class="botao secundario" id="btn-buscar-metadados">🔍 Buscar</button>
+          </div>
+          <div id="busca-status" class="busca-status"></div>
+          <div id="busca-resultados" class="busca-resultados"></div>
+        </div>
+
+        <div class="linha-3">
+          <div class="campo">
+            <label for="midia-status">Status</label>
+            <select id="midia-status"></select>
+          </div>
+          <div class="campo">
+            <label for="midia-nota">Nota (1-5)</label>
+            <input type="number" id="midia-nota" min="1" max="5">
+          </div>
+          <div class="campo">
+            <label for="midia-progresso">Progresso</label>
+            <input type="text" id="midia-progresso" placeholder="ex: Cap. 12">
+          </div>
+        </div>
+
+        <div class="campo">
+          <label for="midia-capa">Link da capa (opcional)</label>
+          <input type="text" id="midia-capa" placeholder="https://...">
+        </div>
+
+        <div class="campo campo-check">
+          <input type="checkbox" id="midia-repertorio">
+          <label for="midia-repertorio">Usar como repertório sociocultural (redação)</label>
+        </div>
+
+        <div class="campo" id="campo-tema" style="display:none;">
+          <label for="midia-tema">Tema do repertório</label>
+          <input type="text" id="midia-tema" placeholder="ex: meio ambiente, tecnologia, direitos humanos">
+        </div>
+
+        <div class="campo">
+          <label for="midia-anotacoes">Anotações</label>
+          <textarea id="midia-anotacoes" placeholder="Ideias, citações, argumentos que essa mídia te deu..."></textarea>
+        </div>
+
+        <div class="modal-rodape">
+          <button type="button" class="botao secundario" id="btn-cancelar-midia">Cancelar</button>
+          <button type="submit" class="botao">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: DETALHE / SESSÕES ================= -->
+  <div class="modal-fundo" id="modal-detalhe-fundo">
+    <div class="modal">
+      <h2 id="detalhe-titulo">Mídia</h2>
+      <p class="cartao-backup" style="display:none;"></p>
+
+      <h3
+        style="font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--tinta-suave);margin-bottom:8px;">
+        Histórico de sessões
+      </h3>
+      <div class="lista-atividades" id="lista-atividades"></div>
+
+      <div class="registrar-sessao">
+        <div class="campo">
+          <label for="sessao-data">Data</label>
+          <input type="date" id="sessao-data">
         </div>
         <div class="campo">
-          <label for="midia-idioma">Idioma</label>
-          <input type="text" id="midia-idioma" list="lista-idiomas" required placeholder="ex: Japonês">
-          <datalist id="lista-idiomas"></datalist>
+          <label for="sessao-minutos">Minutos</label>
+          <input type="number" id="sessao-minutos" min="1" placeholder="30">
         </div>
-      </div>
-
-      <div class="campo">
-        <label for="midia-titulo">Título</label>
-        <div class="linha-busca">
-          <input type="text" id="midia-titulo" required placeholder="ex: Kiki's Delivery Service">
-          <button type="button" class="botao secundario" id="btn-buscar-metadados">🔍 Buscar</button>
+        <div class="campo" id="campo-sessao-quantidade" style="display:none;">
+          <label for="sessao-quantidade" id="rotulo-sessao-quantidade">Quantidade</label>
+          <input type="number" id="sessao-quantidade" min="1" placeholder="0">
         </div>
-        <div id="busca-status" class="busca-status"></div>
-        <div id="busca-resultados" class="busca-resultados"></div>
-      </div>
-
-      <div class="linha-3">
-        <div class="campo">
-          <label for="midia-status">Status</label>
-          <select id="midia-status"></select>
-        </div>
-        <div class="campo">
-          <label for="midia-nota">Nota (1-5)</label>
-          <input type="number" id="midia-nota" min="1" max="5">
-        </div>
-        <div class="campo">
-          <label for="midia-progresso">Progresso</label>
-          <input type="text" id="midia-progresso" placeholder="ex: Cap. 12">
-        </div>
-      </div>
-
-      <div class="campo">
-        <label for="midia-capa">Link da capa (opcional)</label>
-        <input type="text" id="midia-capa" placeholder="https://...">
-      </div>
-
-      <div class="campo campo-check">
-        <input type="checkbox" id="midia-repertorio">
-        <label for="midia-repertorio">Usar como repertório sociocultural (redação)</label>
-      </div>
-
-      <div class="campo" id="campo-tema" style="display:none;">
-        <label for="midia-tema">Tema do repertório</label>
-        <input type="text" id="midia-tema" placeholder="ex: meio ambiente, tecnologia, direitos humanos">
-      </div>
-
-      <div class="campo">
-        <label for="midia-anotacoes">Anotações</label>
-        <textarea id="midia-anotacoes" placeholder="Ideias, citações, argumentos que essa mídia te deu..."></textarea>
+        <button class="botao" id="btn-registrar-sessao">Registrar</button>
       </div>
 
       <div class="modal-rodape">
-        <button type="button" class="botao secundario" id="btn-cancelar-midia">Cancelar</button>
-        <button type="submit" class="botao">Salvar</button>
+        <button type="button" class="botao secundario" id="btn-fechar-detalhe">Fechar</button>
       </div>
-    </form>
-  </div>
-</div>
-
-<!-- ================= MODAL: DETALHE / SESSÕES ================= -->
-<div class="modal-fundo" id="modal-detalhe-fundo">
-  <div class="modal">
-    <h2 id="detalhe-titulo">Mídia</h2>
-    <p class="cartao-backup" style="display:none;"></p>
-
-    <h3 style="font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--tinta-suave);margin-bottom:8px;">
-      Histórico de sessões
-    </h3>
-    <div class="lista-atividades" id="lista-atividades"></div>
-
-    <div class="registrar-sessao">
-      <div class="campo">
-        <label for="sessao-data">Data</label>
-        <input type="date" id="sessao-data">
-      </div>
-      <div class="campo">
-        <label for="sessao-minutos">Minutos</label>
-        <input type="number" id="sessao-minutos" min="1" placeholder="30">
-      </div>
-      <div class="campo" id="campo-sessao-quantidade" style="display:none;">
-        <label for="sessao-quantidade" id="rotulo-sessao-quantidade">Quantidade</label>
-        <input type="number" id="sessao-quantidade" min="1" placeholder="0">
-      </div>
-      <button class="botao" id="btn-registrar-sessao">Registrar</button>
-    </div>
-
-    <div class="modal-rodape">
-      <button type="button" class="botao secundario" id="btn-fechar-detalhe">Fechar</button>
     </div>
   </div>
-</div>
 
-<!-- ================= MODAL: EDITAR PERFIL (NOME E FOTO) ================= -->
-<div class="modal-fundo" id="modal-perfil-fundo">
-  <div class="modal">
-    <h2>Editar Perfil</h2>
-    <form id="form-perfil">
-      <div class="campo">
-        <label for="edit-perfil-nome">Nome do Usuário</label>
-        <input type="text" id="edit-perfil-nome" required placeholder="ex: Seu Nome">
-      </div>
+  <!-- ================= MODAL: EDITAR PERFIL (NOME E FOTO) ================= -->
+  <div class="modal-fundo" id="modal-perfil-fundo">
+    <div class="modal">
+      <h2>Editar Perfil</h2>
+      <form id="form-perfil">
+        <div class="campo">
+          <label for="edit-perfil-nome">Nome do Usuário</label>
+          <input type="text" id="edit-perfil-nome" required placeholder="ex: Seu Nome">
+        </div>
 
-      <div class="campo">
-        <label for="edit-perfil-avatar">URL da Foto de Perfil (Avatar)</label>
-        <input type="url" id="edit-perfil-avatar" placeholder="https://exemplo.com/sua-foto.jpg">
-      </div>
+        <div class="campo">
+          <label for="edit-perfil-avatar">URL da Foto de Perfil (Avatar)</label>
+          <input type="url" id="edit-perfil-avatar" placeholder="https://exemplo.com/sua-foto.jpg">
+        </div>
 
-      <div class="modal-rodape">
-        <button type="button" class="botao secundario" id="btn-cancelar-perfil">Cancelar</button>
-        <button type="submit" class="botao">Salvar</button>
-      </div>
-    </form>
+        <div class="modal-rodape">
+          <button type="button" class="botao secundario" id="btn-cancelar-perfil">Cancelar</button>
+          <button type="submit" class="botao">Salvar</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 
-<!-- ================= MODAL: EDITAR FILMES FAVORITOS (TOP 4) ================= -->
-<div class="modal-fundo" id="modal-top4-fundo">
-  <div class="modal modal-largura-media">
-    <h2>Selecionar Filmes Favoritos (Top 4)</h2>
-    <p style="font-size:13px; color:var(--tinta-suave); margin-bottom:16px;">
-      Escolha até 4 mídias da sua Biblioteca ou insira dados de um filme customizado para destacar no topo da página.
-    </p>
+  <!-- ================= MODAL: EDITAR FILMES FAVORITOS (TOP 4) ================= -->
+  <div class="modal-fundo" id="modal-top4-fundo">
+    <div class="modal modal-largura-media">
+      <h2>Selecionar Filmes Favoritos (Top 4)</h2>
+      <p style="font-size:13px; color:var(--tinta-suave); margin-bottom:16px;">
+        Escolha até 4 mídias da sua Biblioteca ou insira dados de um filme customizado para destacar no topo da página.
+      </p>
 
-    <form id="form-top4">
-      <div class="grid-top4-edicao">
-        <!-- Slot 1 -->
-        <div class="slot-top4-card">
-          <div class="slot-header"><strong>Slot #1</strong></div>
-          <select id="select-top4-slot-0" class="select-top4-midia"></select>
-          <div class="custom-top4-fields" id="custom-fields-0" style="margin-top:8px; display:none;">
-            <input type="text" id="top4-title-0" placeholder="Título do filme" style="margin-bottom:6px;">
-            <input type="url" id="top4-capa-0" placeholder="URL da Capa / Poster">
+      <form id="form-top4">
+        <div class="grid-top4-edicao">
+          <!-- Slot 1 -->
+          <div class="slot-top4-card">
+            <div class="slot-header"><strong>Slot #1</strong></div>
+            <select id="select-top4-slot-0" class="select-top4-midia"></select>
+            <div class="custom-top4-fields" id="custom-fields-0" style="margin-top:8px; display:none;">
+              <input type="text" id="top4-title-0" placeholder="Título do filme" style="margin-bottom:6px;">
+              <input type="url" id="top4-capa-0" placeholder="URL da Capa / Poster">
+            </div>
+          </div>
+
+          <!-- Slot 2 -->
+          <div class="slot-top4-card">
+            <div class="slot-header"><strong>Slot #2</strong></div>
+            <select id="select-top4-slot-1" class="select-top4-midia"></select>
+            <div class="custom-top4-fields" id="custom-fields-1" style="margin-top:8px; display:none;">
+              <input type="text" id="top4-title-1" placeholder="Título do filme" style="margin-bottom:6px;">
+              <input type="url" id="top4-capa-1" placeholder="URL da Capa / Poster">
+            </div>
+          </div>
+
+          <!-- Slot 3 -->
+          <div class="slot-top4-card">
+            <div class="slot-header"><strong>Slot #3</strong></div>
+            <select id="select-top4-slot-2" class="select-top4-midia"></select>
+            <div class="custom-top4-fields" id="custom-fields-2" style="margin-top:8px; display:none;">
+              <input type="text" id="top4-title-2" placeholder="Título do filme" style="margin-bottom:6px;">
+              <input type="url" id="top4-capa-2" placeholder="URL da Capa / Poster">
+            </div>
+          </div>
+
+          <!-- Slot 4 -->
+          <div class="slot-top4-card">
+            <div class="slot-header"><strong>Slot #4</strong></div>
+            <select id="select-top4-slot-3" class="select-top4-midia"></select>
+            <div class="custom-top4-fields" id="custom-fields-3" style="margin-top:8px; display:none;">
+              <input type="text" id="top4-title-3" placeholder="Título do filme" style="margin-bottom:6px;">
+              <input type="url" id="top4-capa-3" placeholder="URL da Capa / Poster">
+            </div>
           </div>
         </div>
 
-        <!-- Slot 2 -->
-        <div class="slot-top4-card">
-          <div class="slot-header"><strong>Slot #2</strong></div>
-          <select id="select-top4-slot-1" class="select-top4-midia"></select>
-          <div class="custom-top4-fields" id="custom-fields-1" style="margin-top:8px; display:none;">
-            <input type="text" id="top4-title-1" placeholder="Título do filme" style="margin-bottom:6px;">
-            <input type="url" id="top4-capa-1" placeholder="URL da Capa / Poster">
-          </div>
+        <div class="modal-rodape">
+          <button type="button" class="botao secundario" id="btn-cancelar-top4">Cancelar</button>
+          <button type="submit" class="botao">Salvar Favoritos</button>
         </div>
-
-        <!-- Slot 3 -->
-        <div class="slot-top4-card">
-          <div class="slot-header"><strong>Slot #3</strong></div>
-          <select id="select-top4-slot-2" class="select-top4-midia"></select>
-          <div class="custom-top4-fields" id="custom-fields-2" style="margin-top:8px; display:none;">
-            <input type="text" id="top4-title-2" placeholder="Título do filme" style="margin-bottom:6px;">
-            <input type="url" id="top4-capa-2" placeholder="URL da Capa / Poster">
-          </div>
-        </div>
-
-        <!-- Slot 4 -->
-        <div class="slot-top4-card">
-          <div class="slot-header"><strong>Slot #4</strong></div>
-          <select id="select-top4-slot-3" class="select-top4-midia"></select>
-          <div class="custom-top4-fields" id="custom-fields-3" style="margin-top:8px; display:none;">
-            <input type="text" id="top4-title-3" placeholder="Título do filme" style="margin-bottom:6px;">
-            <input type="url" id="top4-capa-3" placeholder="URL da Capa / Poster">
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-rodape">
-        <button type="button" class="botao secundario" id="btn-cancelar-top4">Cancelar</button>
-        <button type="submit" class="botao">Salvar Favoritos</button>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
-</div>
 
-<script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
+
 </html>
