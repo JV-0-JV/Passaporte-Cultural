@@ -12,7 +12,7 @@ Bookmeter, etc), só que usando APIs que são livres/gratuitas de verdade:
     Livro / HQ       -> Open Library   (sem chave)
     Podcast / Música -> iTunes Search  (sem chave)
     Filme / Série    -> OMDb           (precisa de chave grátis, veja config.py)
-    Jogo             -> RAWG           (precisa de chave grátis, veja config.py)
+    Jogo             -> IGDB           (precisa de Client ID/Secret grátis, veja config.py)
 
 Todas as funções abaixo devolvem uma lista no MESMO formato, não importa
 a fonte, para o resto do app não precisar saber de onde veio:
@@ -145,27 +145,81 @@ def buscar_omdb(query, tipo_omdb):
 
 
 # ---------------------------------------------------------------------
-# RAWG (Jogo) — precisa de chave gratuita em config.py
+# IGDB (Jogo) — precisa de Client ID + Client Secret gratuitos em config.py
+#
+# A IGDB usa autenticação OAuth2 da Twitch: antes de buscar jogos, é
+# preciso trocar o Client ID/Secret por um "access token" temporário.
+# Guardamos esse token em memória (_igdb_token) e só pedimos um novo
+# quando ele expira, para não gastar uma chamada extra a cada busca.
 # ---------------------------------------------------------------------
 
-def buscar_rawg(query):
-    if not config.RAWG_API_KEY:
-        raise ValueError('Chave da RAWG não configurada. Veja config.py.')
+_igdb_token = {'valor': None, 'expira_em': 0}
 
-    params = {'key': config.RAWG_API_KEY, 'search': query, 'page_size': 6}
-    resp = requests.get('https://api.rawg.io/api/games', params=params, timeout=TIMEOUT)
+
+def _obter_token_igdb():
+    import time
+
+    if _igdb_token['valor'] and time.time() < _igdb_token['expira_em']:
+        return _igdb_token['valor']
+
+    params = {
+        'client_id': config.IGDB_CLIENT_ID,
+        'client_secret': config.IGDB_CLIENT_SECRET,
+        'grant_type': 'client_credentials',
+    }
+    resp = requests.post('https://id.twitch.tv/oauth2/token', params=params, timeout=TIMEOUT)
+    resp.raise_for_status()
+    dados = resp.json()
+
+    _igdb_token['valor'] = dados['access_token']
+    # Guarda uma margem de segurança de 60s antes do vencimento real
+    _igdb_token['expira_em'] = time.time() + dados.get('expires_in', 0) - 60
+    return _igdb_token['valor']
+
+
+def buscar_igdb(query):
+    if not config.IGDB_CLIENT_ID or not config.IGDB_CLIENT_SECRET:
+        raise ValueError('Client ID/Secret da IGDB não configurados. Veja config.py.')
+
+    token = _obter_token_igdb()
+    headers = {
+        'Client-ID': config.IGDB_CLIENT_ID,
+        'Authorization': f'Bearer {token}',
+    }
+    # A IGDB usa a linguagem de consulta "Apicalypse" em vez de query params comuns
+    corpo = (
+        f'search "{query}"; '
+        'fields name, cover.url, first_release_date, summary; '
+        'limit 6;'
+    )
+    resp = requests.post(
+        'https://api.igdb.com/v4/games',
+        headers=headers,
+        data=corpo,
+        timeout=TIMEOUT,
+    )
     resp.raise_for_status()
     dados = resp.json()
 
     resultados = []
-    for item in dados.get('results', [])[:6]:
-        lancamento = item.get('released') or ''
+    for item in dados[:6]:
+        capa = (item.get('cover') or {}).get('url')
+        if capa:
+            # A IGDB devolve a capa em miniatura ("t_thumb"); trocamos por
+            # uma resolução maior ("t_cover_big") e adicionamos o https:
+            capa = 'https:' + capa.replace('t_thumb', 't_cover_big')
+
+        ano = None
+        if item.get('first_release_date'):
+            from datetime import datetime, timezone
+            ano = datetime.fromtimestamp(item['first_release_date'], tz=timezone.utc).year
+
         resultados.append({
             'titulo': item.get('name'),
-            'capa_url': item.get('background_image'),
-            'ano': lancamento[:4] if lancamento else None,
-            'descricao': None,
-            'fonte': 'RAWG',
+            'capa_url': capa,
+            'ano': ano,
+            'descricao': _limpar_descricao(item.get('summary')),
+            'fonte': 'IGDB',
         })
     return resultados
 
@@ -238,7 +292,7 @@ def buscar(tipo, query):
     if tipo == 'Série':
         return buscar_omdb(query, 'series')
     if tipo == 'Jogo':
-        return buscar_rawg(query)
+        return buscar_igdb(query)
     if tipo in ('Livro', 'HQ'):
         return buscar_openlibrary(query)
     if tipo == 'Podcast':

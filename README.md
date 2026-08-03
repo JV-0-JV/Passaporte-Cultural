@@ -19,7 +19,7 @@ Trabalho de faculdade, primeiro período, feito com apoio de IA.
 
 | Site local (Python + Flask), roda no navegador |
 | **Sync com Google Drive** (escopo restrito, só o arquivo de backup) |
-| **Busca automática**, em AniList, VNDB, OMDb, RAWG, Open Library e iTunes |
+| **Busca automática**, em AniList, VNDB, OMDb, IGDB, Open Library e iTunes |
 | Qualquer idioma, é um campo de texto livre |
 | Aba de **repertório sociocultural**|
 
@@ -29,8 +29,8 @@ Trabalho de faculdade, primeiro período, feito com apoio de IA.
 passaporte-cultural/
 ├── app.py               # Backend: todas as rotas da API (o "C-R-U-D")
 ├── database.py          # Conexão com o banco e criação das tabelas
-├── metadados.py          # Busca automática de capas/informações (AniList, VNDB, OMDb, RAWG, Open Library, iTunes)
-├── config.py             # Suas chaves de API (OMDb e RAWG) — veja seção 4
+├── metadados.py          # Busca automática de capas/informações (AniList, VNDB, OMDb, IGDB, Open Library, iTunes)
+├── config.py             # Suas chaves de API (OMDb e IGDB) — veja seção 4
 ├── drive_sync.py          # Sincronização opcional com o Google Drive
 ├── autenticar_drive.py    # Script para conectar sua conta do Google (rodar 1x)
 ├── seed_exemplo.py       # Script opcional: preenche o banco com exemplos
@@ -68,22 +68,36 @@ Isso é o modelo clássico de **CRUD com API REST**: o frontend nunca acessa o b
 | Livro, HQ | [Open Library](https://openlibrary.org) | Não — já funciona |
 | Podcast, Música | [iTunes Search](https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/iTuneSearchAPI/) | Não — já funciona |
 | Filme, Série | [OMDb](https://www.omdbapi.com) | **Sim**, grátis |
-| Jogo | [RAWG](https://rawg.io/apidocs) | **Sim**, grátis |
+| Jogo | [IGDB](https://api-docs.igdb.com/) | **Sim**, grátis (via login Twitch) |
 
-Ou seja: assim que você roda o projeto, a busca automática **já funciona** para 4 dos 6 grupos de tipos. Só Filme/Série e Jogo precisam de uma chave gratuita:
+Ou seja: assim que você roda o projeto, a busca automática **já funciona** para 4 dos 6 grupos de tipos. Só Filme/Série e Jogo precisam de credenciais gratuitas:
 
 1. **OMDb**: acesse https://www.omdbapi.com/apikey.aspx, escolha o plano **FREE** (1.000 buscas/dia), preencha e-mail e confirme pelo link que chega na caixa de entrada.
-2. **RAWG**: acesse https://rawg.io/apidocs, crie uma conta gratuita e copie sua chave no painel.
-3. Abra o arquivo `config.py` e cole cada chave entre as aspas:
+
+2. **IGDB**: a IGDB pertence à Twitch, então a chave é gerada através de uma conta Twitch, seguindo estes passos:
+   1. Crie uma conta gratuita em https://www.twitch.tv (se ainda não tiver uma) e depois acesse o Twitch Developer Console em https://dev.twitch.tv/console/apps.
+   2. Clique em **Register Your Application**.
+   3. Preencha:
+      - **Name**: qualquer nome (ex: `passaporte-cultural`).
+      - **OAuth Redirect URLs**: `http://localhost`.
+      - **Category**: escolha `Application Integration` (ou similar).
+   4. Salve e, na lista de aplicativos, clique em **Manage** no app que você acabou de criar.
+   5. Copie o **Client ID** que aparece na tela.
+   6. Clique em **New Secret** para gerar o **Client Secret** e copie-o também (ele só aparece uma vez — se perder, gere outro).
+
+3. Abra o arquivo `config.py` e cole cada credencial entre as aspas:
 
 ```python
 OMDB_API_KEY = "sua-chave-aqui"
-RAWG_API_KEY = "sua-chave-aqui"
+IGDB_CLIENT_ID = "seu-client-id-aqui"
+IGDB_CLIENT_SECRET = "seu-client-secret-aqui"
 ```
 
 4. Salve o arquivo e reinicie o servidor (`Ctrl+C` e rode `python3 app.py` de novo).
 
-Se você não configurar essas duas chaves, o resto do app continua funcionando normalmente — só a busca automática de Filme/Série/Jogo fica desativada (você preenche esses campos na mão).
+Se você não configurar essas credenciais, o resto do app continua funcionando normalmente — só a busca automática de Filme/Série/Jogo fica desativada (você preenche esses campos na mão).
+
+> **Como funciona por trás dos panos:** diferente das outras APIs, a IGDB não aceita o Client ID/Secret diretamente nas buscas. O app primeiro troca essas credenciais por um "access token" temporário junto à Twitch (isso é automático, feito em `metadados.py`) e só depois usa esse token para buscar os jogos. O token é guardado em memória enquanto o servidor roda e renovado sozinho quando expira, então você não precisa se preocupar com isso no dia a dia.
 
 ## 5. Sincronização com Google Drive (opcional)
 
@@ -130,7 +144,7 @@ Lembrando: busca automática de capa (seção 4) e Google Drive (seção 5) são
 - **Banco de dados (SQLite)**: um arquivo só, sem precisar instalar servidor de banco nenhum. As tabelas estão descritas em `database.py`.
 - **Frontend (HTML/CSS/JS puro, sem framework)**: `script.js` usa `fetch()` para conversar com o backend e `innerHTML` para desenhar os cards na tela — nenhuma biblioteca externa além do Chart.js (só para os gráficos).
 - **CRUD**: toda operação de "Criar mídia", "Editar", "Apagar" no site corresponde diretamente a um `POST`, `PUT` ou `DELETE` em `app.py`.
-- **Integrações externas**: `metadados.py` isola toda a lógica de "conversar com sites de fora" (AniList, VNDB, OMDb, RAWG, Open Library, iTunes) atrás de uma única função `buscar(tipo, query)` — o resto do app não precisa saber os detalhes de cada API.
+- **Integrações externas**: `metadados.py` isola toda a lógica de "conversar com sites de fora" (AniList, VNDB, OMDb, IGDB, Open Library, iTunes) atrás de uma única função `buscar(tipo, query)` — o resto do app não precisa saber os detalhes de cada API.
 - **Google Drive**: `drive_sync.py` usa o protocolo OAuth 2.0 (o mesmo que "Entrar com o Google" usa) para pedir permissão, e a API do Google Drive para enviar/baixar o arquivo de backup.
 
 ## 8. Possíveis extensões futuras (se quiser ir além)
