@@ -843,7 +843,43 @@ function iniciar() {
   document.getElementById('btn-drive-enviar').addEventListener('click', enviarParaDrive);
   document.getElementById('btn-drive-baixar').addEventListener('click', baixarDoDrive);
 
+  // Botão de alternância de tema claro/escuro
+  document.getElementById('btn-toggle-tema').addEventListener('click', alternarTema);
+
   carregarPainel();
 }
 
 document.addEventListener('DOMContentLoaded', iniciar);
+
+// =====================================================================
+// TEMA CLARO / ESCURO
+// O atributo data-theme é aplicado no <html> (raiz) para garantir que
+// TODOS os elementos do site sejam afetados pelas regras CSS.
+// A preferência é salva no localStorage para persistir entre visitas.
+// =====================================================================
+
+(function aplicarTemaSalvo() {
+  // Lê o tema salvo; se não houver, usa preferência do sistema operacional
+  const temaSalvo = localStorage.getItem('passaporte-tema');
+  const prefereSistema = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const temaInicial = temaSalvo || (prefereSistema ? 'dark' : 'light');
+
+  if (temaInicial === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+
+function alternarTema() {
+  const html = document.documentElement;
+  const temaAtual = html.getAttribute('data-theme');
+
+  if (temaAtual === 'dark') {
+    // Volta para o modo claro
+    html.removeAttribute('data-theme');
+    localStorage.setItem('passaporte-tema', 'light');
+  } else {
+    // Ativa o modo escuro
+    html.setAttribute('data-theme', 'dark');
+    localStorage.setItem('passaporte-tema', 'dark');
+  }
+}

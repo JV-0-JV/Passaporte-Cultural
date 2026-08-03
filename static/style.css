@@ -397,7 +397,66 @@
 
 }
 
+/* ============================================================
+   TRANSIÇÃO GLOBAL ENTRE TEMAS
+   Faz com que TODOS os elementos mudem suavemente de cor
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Exceção: elementos que não devem ter transição de cor
+   (imagens, vídeos, etc.) */
+img, canvas, svg { transition: none; }
+
+/* ============================================================
+   BOTÃO DE ALTERNÂNCIA DE TEMA (☀️ / 🌙)
+   ============================================================ */
+
+.btn-tema {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  color: #F1ECDD;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  /* Não herda a transição global de cor — usa a própria */
+  transition: background 0.2s, border-color 0.2s, transform 0.1s !important;
+}
+
+.btn-tema:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: var(--dourado);
+  transform: scale(1.05);
+}
+
+.btn-tema:active {
+  transform: scale(0.97);
+}
+
+/* Controla qual ícone aparece de acordo com o tema ativo */
+
+/* Modo claro: mostra só a lua (para ir para o escuro) */
+.btn-tema-sol { display: none; }
+.btn-tema-lua { display: inline; }
+
+/* Modo escuro: mostra só o sol (para voltar ao claro) */
+[data-theme="dark"] .btn-tema-sol { display: inline; }
+[data-theme="dark"] .btn-tema-lua { display: none; }
+
 * { box-sizing: border-box; }
+
 
 body {
   margin: 0;
