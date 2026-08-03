@@ -180,6 +180,32 @@
 }
 
 /* ============================================================
+   CARIMBO-STAT (estatísticas do painel)
+   O .numero usa var(--azul) que fica escuro demais no dark mode
+   ============================================================ */
+
+[data-theme="dark"] .carimbo-stat {
+
+    background: #2B2B2B;
+
+    border-color: #444;
+
+}
+
+[data-theme="dark"] .carimbo-stat .numero {
+
+    /* Dourado em vez do azul escuro — legível e dentro da identidade visual */
+    color: var(--dourado);
+
+}
+
+[data-theme="dark"] .carimbo-stat .rotulo {
+
+    color: #B5B5B5;
+
+}
+
+/* ============================================================
    BOTÕES
    ============================================================ */
 
