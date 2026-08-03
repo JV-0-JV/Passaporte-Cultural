@@ -642,10 +642,14 @@ async function carregarPerfil() {
 }
 
 function renderizarPerfil(perfil) {
-  // Nome do Usuário e Foto de Avatar
-  document.getElementById('perfil-nome-exibicao').textContent = perfil.nome || 'Viajante Cultural';
+  // Elementos podem não existir se o perfil foi removido do Painel — usa guards
+  const nomeEl = document.getElementById('perfil-nome-exibicao');
+  if (nomeEl) nomeEl.textContent = perfil.nome || 'Viajante Cultural';
+
   const imgAvatar = document.getElementById('perfil-avatar-img');
-  imgAvatar.src = perfil.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80';
+  if (imgAvatar) {
+    imgAvatar.src = perfil.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80';
+  }
 }
 
 function renderizarTop4(top4List) {
