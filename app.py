@@ -15,7 +15,7 @@ Isso é o "CRUD": Create, Read, Update, Delete.
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Flask, jsonify, request, render_template, Response
 
@@ -304,13 +304,18 @@ def estatisticas():
         ORDER BY total DESC
     ''').fetchall()
 
+    # Corte calculado em Python com horário local (não UTC), pois o campo
+    # "data" das sessões já é salvo como data local (ex: dataLocalISO no JS).
+    # Usar date('now', ...) do SQLite compararia contra UTC e cortaria o
+    # intervalo no dia errado.
+    corte_semana = (datetime.now() - timedelta(days=6)).strftime('%Y-%m-%d')
     ultimos_dias = conn.execute('''
         SELECT data, COALESCE(SUM(minutos), 0) AS minutos
         FROM atividades
-        WHERE date(data) >= date('now', '-6 days')
+        WHERE date(data) >= date(?)
         GROUP BY data
         ORDER BY data ASC
-    ''').fetchall()
+    ''', (corte_semana,)).fetchall()
 
     conn.close()
 
@@ -335,13 +340,16 @@ def heatmap_atividades():
     desenhar o mapa de calor de atividade no Painel."""
     dias = request.args.get('dias', default=365, type=int)
     conn = get_db()
+    # Mesmo raciocínio do endpoint de resumo: corte calculado em Python com
+    # horário local, não com date('now', ...) do SQLite (que é UTC).
+    corte = (datetime.now() - timedelta(days=dias)).strftime('%Y-%m-%d')
     linhas = conn.execute('''
         SELECT data, COALESCE(SUM(minutos), 0) AS minutos
         FROM atividades
-        WHERE date(data) >= date('now', ?)
+        WHERE date(data) >= date(?)
         GROUP BY data
         ORDER BY data ASC
-    ''', (f'-{dias} days',)).fetchall()
+    ''', (corte,)).fetchall()
     conn.close()
     return jsonify([dict(r) for r in linhas])
 

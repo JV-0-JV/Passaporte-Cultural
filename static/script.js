@@ -56,6 +56,17 @@ async function api(caminho, opcoes = {}) {
   return resposta.text();
 }
 
+function dataLocalISO(data) {
+  // Formata uma data como YYYY-MM-DD usando o horário LOCAL do navegador.
+  // Não usar toISOString() aqui: ele converte para UTC antes de formatar,
+  // então sessões registradas à noite (Brasil = UTC-3) acabavam caindo
+  // no dia seguinte (ex: 22h de 02/08 vira 01h de 03/08 em UTC).
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const dia = String(data.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
 function escapeHtml(texto) {
   const div = document.createElement('div');
   div.textContent = texto ?? '';
@@ -174,7 +185,7 @@ async function carregarPainel() {
   for (let i = 6; i >= 0; i--) {
     const d = new Date(hoje);
     d.setDate(hoje.getDate() - i);
-    diasMapa[d.toISOString().slice(0, 10)] = 0;
+    diasMapa[dataLocalISO(d)] = 0;
   }
   dados.ultimos_dias.forEach(r => { if (r.data in diasMapa) diasMapa[r.data] = r.minutos; });
 
@@ -228,7 +239,7 @@ async function carregarHeatmap() {
   for (let i = 363; i >= 0; i--) {
     const d = new Date(hoje);
     d.setDate(hoje.getDate() - i);
-    const chave = d.toISOString().slice(0, 10);
+    const chave = dataLocalISO(d);
     dias.push({ data: chave, minutos: mapa[chave] || 0 });
   }
 
@@ -497,7 +508,7 @@ async function abrirDetalhe(id) {
   tipoMidiaAtual = m.tipo;
   document.getElementById('detalhe-titulo').textContent = m.titulo;
   renderizarAtividades(m.atividades);
-  document.getElementById('sessao-data').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('sessao-data').value = dataLocalISO(new Date());
   document.getElementById('sessao-minutos').value = '';
   document.getElementById('sessao-quantidade').value = '';
   document.getElementById('sessao-paginas').value = '';
