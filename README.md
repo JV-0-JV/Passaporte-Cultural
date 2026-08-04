@@ -9,7 +9,7 @@ Trabalho de faculdade, primeiro período, feito com apoio de IA.
 ## 1. O que o projeto faz
 
 - **Biblioteca de mídias**: cadastre filmes, séries, animes, jogos, livros, mangás, HQs, visual novels, novels, podcasts, música — em qualquer idioma que você esteja estudando.
-- **Busca automática de capa e informações**: ao cadastrar uma mídia, clique em "🔍 Buscar" e o app procura a capa, ano e sinopse automaticamente em APIs públicas (uma para cada tipo de mídia — veja a seção 3 abaixo).
+- **Busca automática de capa e informações**: ao cadastrar uma mídia, clique em "Buscar" e o app procura a capa, ano e sinopse automaticamente em APIs públicas (uma para cada tipo de mídia — veja a seção 3 abaixo).
 - **Log de imersão**: para cada mídia, registre sessões (data + minutos + episódios/páginas/palavras, dependendo do tipo), como um diário de estudo.
 - **Painel**: horas totais, horas por idioma, mídias por tipo, atividade dos últimos 7 dias, **mapa de calor de atividade** (estilo GitHub) dos últimos 12 meses, e uma tabela de detalhamento por idioma (horas, mídias, episódios, páginas, palavras).
 - **Repertório sociocultural**: marque qualquer mídia como "repertório", associe um tema (ex: meio ambiente, inclusão, tecnologia) e escreva uma anotação. Depois é só abrir a aba **Repertório** antes de escrever uma redação e revisar tudo já organizado por tema.
@@ -17,11 +17,12 @@ Trabalho de faculdade, primeiro período, feito com apoio de IA.
 
 ## 2. Requisitos
 
-| Site local (Python + Flask), roda no navegador |
-| **Sync com Google Drive** (escopo restrito, só o arquivo de backup) |
-| **Busca automática**, em AniList, VNDB, OMDb, IGDB, Open Library e iTunes |
-| Qualquer idioma, é um campo de texto livre |
-| Aba de **repertório sociocultural**|
+- **Site local** (Python + Flask), roda no navegador 
+- **backup local** (exportar/importar .json)
+- **Busca automática**, em OMDb, IGDB, Open Library, AniList, VNDB e iTunes 
+- **Qualquer idioma**, faça o track de suas imersões em qualquer idioma 
+- Aba de **repertório sociocultural**
+- **Sync com Google Drive** (opcional)
 
 ## 3. Como o projeto é organizado (arquitetura)
 
@@ -150,6 +151,5 @@ Lembrando: busca automática de capa (seção 4) e Google Drive (seção 5) são
 ## 8. Possíveis extensões futuras (se quiser ir além)
 
 - Gráfico de "ritmo de leitura" (para prever quando você termina um livro/mangá com base no seu ritmo atual).
-- Sistema de login, caso vários usuários usem o mesmo servidor.
 - Sincronização automática em segundo plano (hoje o envio/download do Google Drive é manual, por botão).
 - Cache local das buscas de metadados, para não repetir a mesma busca em APIs externas toda vez.
