@@ -139,7 +139,7 @@ O banco já vem com **5 mídias de exemplo** (para você não abrir uma tela vaz
 
 Lembrando: busca automática de capa (seção 4) e Google Drive (seção 5) são **opcionais** — o site roda perfeitamente sem configurar nenhum dos dois.
 
-## 7. Para apresentar / defender o trabalho
+## 7. Detalhamento
 
 - **Backend (Flask/Python)**: define "rotas" — cada rota é uma URL + um verbo HTTP (GET busca, POST cria, PUT atualiza, DELETE apaga). Isso está todo em `app.py`.
 - **Banco de dados (SQLite)**: um arquivo só, sem precisar instalar servidor de banco nenhum. As tabelas estão descritas em `database.py`.
@@ -148,7 +148,7 @@ Lembrando: busca automática de capa (seção 4) e Google Drive (seção 5) são
 - **Integrações externas**: `metadados.py` isola toda a lógica de "conversar com sites de fora" (AniList, VNDB, OMDb, IGDB, Open Library, iTunes) atrás de uma única função `buscar(tipo, query)` — o resto do app não precisa saber os detalhes de cada API.
 - **Google Drive**: `drive_sync.py` usa o protocolo OAuth 2.0 (o mesmo que "Entrar com o Google" usa) para pedir permissão, e a API do Google Drive para enviar/baixar o arquivo de backup.
 
-## 8. Possíveis extensões futuras (se quiser ir além)
+## 8. Possíveis extensões futuras
 
 - Gráfico de "ritmo de leitura" (para prever quando você termina um livro/mangá com base no seu ritmo atual).
 - Sincronização automática em segundo plano (hoje o envio/download do Google Drive é manual, por botão).
